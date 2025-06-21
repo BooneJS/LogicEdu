@@ -13,69 +13,94 @@ from manim import (
     ArcPolygon,
     Polygon,
 )
-from manim._config.logger_utils import set_file_logger
 from basics import *
-
-xor_shift_right = 0.15
-or_radius = 0.75
-pin_length = 0.4
+from typing import List
 
 
 class UnaryLogic(VGroup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.xor_shift_right = kwargs.pop("xor_shift_right", 0.15)
+        self.or_radius = kwargs.pop("or_radius", 0.75)
+        self.pin_length = kwargs.pop("pin_length", 0.4)
+        self.inputs: List[Pin] = []
+        self.outputs: List[Pin] = []
 
-    def invert_output(self, circle_loc, pin):
-        self.circle = (
-            Circle(radius=xor_shift_right / 2, color=WHITE)
-            .move_to(circle_loc)
-            .shift(RIGHT * xor_shift_right / 2)
-        )
-        self.add(self.circle)
-        new_start = pin.line.get_start() + RIGHT * xor_shift_right
-        pin.line.put_start_and_end_on(new_start, pin.line.get_end())
+    def invert_output(self):
+        self.outputs[0].add_invert()
 
-    def get_input0_connection(self):
-        """Return the input0 dot center."""
-        pass
+    def get_input_connection(self, index: int):
+        return self.inputs[index].get_connection()
 
-    def get_output_connection(self):
-        """Return the output dot center."""
-        pass
+    def get_output_connection(self, index: int = 0):
+        return self.outputs[index].get_connection()
+
+    def get_input_count(self):
+        return len(self.inputs)
+
+    def get_output_count(self):
+        return len(self.outputs)
 
 
 class BinaryLogic(VGroup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bubble_radius = 1  # 1 for *OR, 0.5 for *AND
-
-    def invert_pin(self, pin):
-        pin.add_invert()
-
-    def ex_inputs(self, input0_pin, input1_pin, angle):
-        # TODO: y_intercept isn't always available
-        arc = ArcBetweenPoints(
-            start=UP + LEFT * self.y_intercept + LEFT * xor_shift_right,
-            end=LEFT * self.y_intercept + LEFT * xor_shift_right,
-            angle=angle,
+        self.rear_angle = kwargs.pop(
+            "rear_angle", -PI / 2
+        )  # OR symbol with concave back
+        self.bubble_angle = kwargs.pop(
+            "bubble_angle", PI / 4
+        )  # OR symbol with acute angled nose
+        self.y_intercept = sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
+        self.xor_shift_right = kwargs.pop("xor_shift_right", 0.15)
+        self.or_radius = kwargs.pop("or_radius", 0.75)
+        self.pin_length = kwargs.pop("pin_length", 0.4)
+        self.inputs: List[Pin] = []
+        self.outputs: List[Pin] = []
+        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / (4 / 3)))
+        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 4))
+        self.outputs.append(
+            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
         )
-        self.add(arc)
-        new_start = input0_pin.line.get_start() + LEFT * xor_shift_right
-        input0_pin.line.put_start_and_end_on(new_start, input0_pin.line.get_end())
-        new_start = input1_pin.line.get_start() + LEFT * xor_shift_right
-        input1_pin.line.put_start_and_end_on(new_start, input1_pin.line.get_end())
+        self.add(*self.inputs)
+        self.add(*self.outputs)
+
+    def invert_output(self):
+        self.outputs[0].add_invert()
+
+    def ex_inputs(self):
+        ex = ArcBetweenPoints(
+            start=UP + LEFT * self.y_intercept + LEFT * self.xor_shift_right,
+            end=LEFT * self.y_intercept + LEFT * self.xor_shift_right,
+            angle=self.rear_angle,
+        )
+        self.add(ex)
+        new_start = self.inputs[0].line.get_start() + LEFT * self.xor_shift_right
+        self.inputs[0].line.put_start_and_end_on(
+            new_start, self.inputs[0].line.get_end()
+        )
+        new_start = self.inputs[1].line.get_start() + LEFT * self.xor_shift_right
+        self.inputs[1].line.put_start_and_end_on(
+            new_start, self.inputs[1].line.get_end()
+        )
 
     def get_input0_connection(self):
         """Return the input0 dot center."""
-        pass
+        return self.inputs[0].get_connection()
 
     def get_input1_connection(self):
         """Return the input1 dot center."""
-        pass
+        return self.inputs[0].get_connection()
 
     def get_output_connection(self):
         """Return the output dot center."""
-        pass
+        return self.outputs[0].get_connection()
+
+    def get_input_count(self):
+        return len(self.inputs)
+
+    def get_output_count(self):
+        return len(self.outputs)
 
 
 class AND2(BinaryLogic):
@@ -84,7 +109,7 @@ class AND2(BinaryLogic):
     def __init__(self, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(**kwargs)
-        self.arcpolygon = ArcPolygon(
+        self.shape = ArcPolygon(
             ORIGIN,
             RIGHT * 0.5,
             UP + RIGHT * 0.5,
@@ -100,24 +125,9 @@ class AND2(BinaryLogic):
             ],
             color=WHITE,
         )
-        self.input0_pin = Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / (4 / 3))
-        self.input1_pin = Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 4)
-        self.output_pin = Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
         self.add(
-            self.arcpolygon,
-            self.input0_pin,
-            self.input1_pin,
-            self.output_pin,
+            self.shape,
         )
-
-    def get_input0_connection(self):
-        return self.input0_pin.get_connection()
-
-    def get_input1_connection(self):
-        return self.input1_pin.get_connection()
-
-    def get_output_connection(self):
-        return self.output_pin.get_connection()
 
 
 class NAND2(AND2):
@@ -125,7 +135,7 @@ class NAND2(AND2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.invert_pin(self.output_pin)
+        self.invert_output()
 
 
 class OR2(BinaryLogic):
@@ -133,12 +143,8 @@ class OR2(BinaryLogic):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print(f"name of class: {type(self).__name__}")
-        self.rear_angle = -PI / 2
-        self.bubble_angle = PI / 4
-        self.y_intercept = sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
         edge_length = 0.25 + self.y_intercept
-        self.arcpolygon = ArcPolygon(
+        self.shape = ArcPolygon(
             UP + LEFT * self.y_intercept,
             ORIGIN + LEFT * self.y_intercept,
             RIGHT * edge_length,
@@ -160,25 +166,9 @@ class OR2(BinaryLogic):
             color=WHITE,
         )
 
-        self.input0_pin = Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / (4 / 3))
-        self.input1_pin = Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 4)
-        self.output_pin = Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
-
         self.add(
-            self.arcpolygon,
-            self.input0_pin,
-            self.input1_pin,
-            self.output_pin,
+            self.shape,
         )
-
-    def get_input0_connection(self):
-        return self.input0_pin.get_connection()
-
-    def get_input1_connection(self):
-        return self.input1_pin.get_connection()
-
-    def get_output_connection(self):
-        return self.output_pin.get_connection()
 
 
 class NOR2(OR2):
@@ -186,7 +176,7 @@ class NOR2(OR2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.invert_pin(self.output_pin)
+        self.invert_output()
 
 
 class XOR2(OR2):
@@ -194,7 +184,7 @@ class XOR2(OR2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ex_inputs(self.input0_pin, self.input1_pin, self.rear_angle)
+        self.ex_inputs()
 
 
 class XNOR2(XOR2):
@@ -202,7 +192,7 @@ class XNOR2(XOR2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.invert_pin(self.output_pin)
+        self.invert_output()
 
 
 class BUF(UnaryLogic):
@@ -210,23 +200,14 @@ class BUF(UnaryLogic):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.triangle = Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
-        self.input0_pin = Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 2)
-        self.output_pin = Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
-        self.add(
-            self.triangle,
-            self.input0_pin,
-            self.output_pin,
+        self.shape = Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
+        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 2))
+        self.outputs.append(
+            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
         )
-
-    def invert_pin(self, pin):
-        pin.add_invert()
-
-    def get_input0_connection(self):
-        return self.input0_pin.get_connection()
-
-    def get_output_connection(self):
-        return self.output_pin.get_connection()
+        self.add(self.shape)
+        self.add(*self.inputs)
+        self.add(*self.outputs)
 
 
 class INV(BUF):
@@ -234,7 +215,7 @@ class INV(BUF):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.invert_pin(self.output_pin)
+        self.invert_output()
 
 
 all_gates = [

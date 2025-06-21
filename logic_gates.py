@@ -1,4 +1,5 @@
 from math import sqrt
+from turtle import Shape
 from manim import (
     VGroup,
     Circle,
@@ -18,16 +19,21 @@ from typing import List
 import enum
 
 
-class ShapeType(enum.Enum):
+class LogicType(enum.Enum):
     AND = "AND"
+    NAND = "NAND"
     OR = "OR"
+    NOR = "NOR"
+    XOR = "XOR"
+    XNOR = "XNOR"
+    BUF = "BUF"
     INV = "INV"
 
 
 class ShapeFactory:
 
     @staticmethod
-    def create_shape(shape_type: ShapeType, **kwargs):
+    def create_shape(logic_type: LogicType, **kwargs):
         y_intercept = kwargs.pop(
             "y_intercept", sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
         )
@@ -35,47 +41,48 @@ class ShapeFactory:
         rear_angle = kwargs.pop("rear_angle", -PI / 2)
         bubble_angle = kwargs.pop("bubble_angle", PI / 4)
 
-        if shape_type == ShapeType.AND:
-            return ArcPolygon(
-                ORIGIN,
-                RIGHT * 0.5,
-                UP + RIGHT * 0.5,
-                UP,
-                arc_config=[
-                    {"angle": 0},
-                    {
-                        "angle": PI / 2,
-                        "radius": 0.5,
-                    },
-                    {"angle": 0},
-                    {"angle": 0},
-                ],
-                color=WHITE,
-            )
-        elif shape_type == ShapeType.OR:
-            return ArcPolygon(
-                UP + LEFT * y_intercept,
-                ORIGIN + LEFT * y_intercept,
-                RIGHT * edge_length,
-                UP * 0.5 + RIGHT,
-                UP + RIGHT * edge_length,
-                arc_config=[
-                    {
-                        "angle": rear_angle,
-                    },
-                    {"angle": 0},
-                    {
-                        "angle": bubble_angle,
-                    },
-                    {
-                        "angle": bubble_angle,
-                    },
-                    {"angle": 0},
-                ],
-                color=WHITE,
-            )
-        elif shape_type == ShapeType.INV:
-            return Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
+        match logic_type:
+            case LogicType.AND | LogicType.NAND:
+                return ArcPolygon(
+                    ORIGIN,
+                    RIGHT * 0.5,
+                    UP + RIGHT * 0.5,
+                    UP,
+                    arc_config=[
+                        {"angle": 0},
+                        {
+                            "angle": PI / 2,
+                            "radius": 0.5,
+                        },
+                        {"angle": 0},
+                        {"angle": 0},
+                    ],
+                    color=WHITE,
+                )
+            case LogicType.OR | LogicType.NOR | LogicType.XOR | LogicType.XNOR:
+                return ArcPolygon(
+                    UP + LEFT * y_intercept,
+                    ORIGIN + LEFT * y_intercept,
+                    RIGHT * edge_length,
+                    UP * 0.5 + RIGHT,
+                    UP + RIGHT * edge_length,
+                    arc_config=[
+                        {
+                            "angle": rear_angle,
+                        },
+                        {"angle": 0},
+                        {
+                            "angle": bubble_angle,
+                        },
+                        {
+                            "angle": bubble_angle,
+                        },
+                        {"angle": 0},
+                    ],
+                    color=WHITE,
+                )
+            case LogicType.BUF | LogicType.INV:
+                return Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
 
 
 class UnaryLogic(VGroup):
@@ -92,7 +99,7 @@ class UnaryLogic(VGroup):
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
-        self.shape = ShapeFactory.create_shape(ShapeType.INV)
+        self.shape = ShapeFactory.create_shape(LogicType.INV)
         self.add(self.shape)
 
     def invert_output(self):
@@ -112,7 +119,9 @@ class UnaryLogic(VGroup):
 
 
 class BinaryLogic(VGroup):
-    def __init__(self, **kwargs):
+    def __init__(self, logic_type: LogicType, **kwargs):
+        self.num_inputs = kwargs.pop("num_inputs", 2)
+        self.logic_type = logic_type
         super().__init__(**kwargs)
         self.rear_angle = kwargs.pop(
             "rear_angle", -PI / 2
@@ -133,6 +142,8 @@ class BinaryLogic(VGroup):
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
+        self.shape = ShapeFactory.create_shape(self.logic_type)
+        self.add(self.shape)
 
     def invert_output(self):
         self.outputs[0].add_invert()
@@ -176,12 +187,7 @@ class AND2(BinaryLogic):
     """Create a custom AND2 shape."""
 
     def __init__(self, **kwargs):
-        self.num_inputs = kwargs.pop("num_inputs", 2)
-        super().__init__(**kwargs)
-        self.shape = ShapeFactory.create_shape(ShapeType.AND)
-        self.add(
-            self.shape,
-        )
+        super().__init__(LogicType.AND, **kwargs)
 
 
 class NAND2(AND2):
@@ -197,8 +203,7 @@ class OR2(BinaryLogic):
 
     def __init__(self, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
-        super().__init__(**kwargs)
-        self.shape = ShapeFactory.create_shape(ShapeType.OR)
+        super().__init__(LogicType.OR, **kwargs)
         self.add(
             self.shape,
         )

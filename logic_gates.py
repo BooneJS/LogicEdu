@@ -15,6 +15,67 @@ from manim import (
 )
 from basics import *
 from typing import List
+import enum
+
+
+class ShapeType(enum.Enum):
+    AND = "AND"
+    OR = "OR"
+    INV = "INV"
+
+
+class ShapeFactory:
+
+    @staticmethod
+    def create_shape(shape_type: ShapeType, **kwargs):
+        y_intercept = kwargs.pop(
+            "y_intercept", sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
+        )
+        edge_length = kwargs.pop("edge_length", 0.25 + y_intercept)
+        rear_angle = kwargs.pop("rear_angle", -PI / 2)
+        bubble_angle = kwargs.pop("bubble_angle", PI / 4)
+
+        if shape_type == ShapeType.AND:
+            return ArcPolygon(
+                ORIGIN,
+                RIGHT * 0.5,
+                UP + RIGHT * 0.5,
+                UP,
+                arc_config=[
+                    {"angle": 0},
+                    {
+                        "angle": PI / 2,
+                        "radius": 0.5,
+                    },
+                    {"angle": 0},
+                    {"angle": 0},
+                ],
+                color=WHITE,
+            )
+        elif shape_type == ShapeType.OR:
+            return ArcPolygon(
+                UP + LEFT * y_intercept,
+                ORIGIN + LEFT * y_intercept,
+                RIGHT * edge_length,
+                UP * 0.5 + RIGHT,
+                UP + RIGHT * edge_length,
+                arc_config=[
+                    {
+                        "angle": rear_angle,
+                    },
+                    {"angle": 0},
+                    {
+                        "angle": bubble_angle,
+                    },
+                    {
+                        "angle": bubble_angle,
+                    },
+                    {"angle": 0},
+                ],
+                color=WHITE,
+            )
+        elif shape_type == ShapeType.INV:
+            return Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
 
 
 class UnaryLogic(VGroup):
@@ -25,6 +86,14 @@ class UnaryLogic(VGroup):
         self.pin_length = kwargs.pop("pin_length", 0.4)
         self.inputs: List[Pin] = []
         self.outputs: List[Pin] = []
+        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 2))
+        self.outputs.append(
+            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
+        )
+        self.add(*self.inputs)
+        self.add(*self.outputs)
+        self.shape = ShapeFactory.create_shape(ShapeType.INV)
+        self.add(self.shape)
 
     def invert_output(self):
         self.outputs[0].add_invert()
@@ -109,22 +178,7 @@ class AND2(BinaryLogic):
     def __init__(self, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(**kwargs)
-        self.shape = ArcPolygon(
-            ORIGIN,
-            RIGHT * 0.5,
-            UP + RIGHT * 0.5,
-            UP,
-            arc_config=[
-                {"angle": 0},
-                {
-                    "angle": PI / 2,
-                    "radius": 0.5,
-                },
-                {"angle": 0},
-                {"angle": 0},
-            ],
-            color=WHITE,
-        )
+        self.shape = ShapeFactory.create_shape(ShapeType.AND)
         self.add(
             self.shape,
         )
@@ -142,30 +196,9 @@ class OR2(BinaryLogic):
     """Create a custom OR2 shape."""
 
     def __init__(self, **kwargs):
+        self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(**kwargs)
-        edge_length = 0.25 + self.y_intercept
-        self.shape = ArcPolygon(
-            UP + LEFT * self.y_intercept,
-            ORIGIN + LEFT * self.y_intercept,
-            RIGHT * edge_length,
-            UP * 0.5 + RIGHT,
-            UP + RIGHT * edge_length,
-            arc_config=[
-                {
-                    "angle": self.rear_angle,
-                },
-                {"angle": 0},
-                {
-                    "angle": self.bubble_angle,
-                },
-                {
-                    "angle": self.bubble_angle,
-                },
-                {"angle": 0},
-            ],
-            color=WHITE,
-        )
-
+        self.shape = ShapeFactory.create_shape(ShapeType.OR)
         self.add(
             self.shape,
         )
@@ -200,14 +233,6 @@ class BUF(UnaryLogic):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.shape = Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
-        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 2))
-        self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
-        )
-        self.add(self.shape)
-        self.add(*self.inputs)
-        self.add(*self.outputs)
 
 
 class INV(BUF):

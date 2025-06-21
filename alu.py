@@ -1,4 +1,4 @@
-from manim import *
+from manim import Polygon, VGroup, Text, Line, Dot, WHITE, BLUE, LEFT, RIGHT, UP, DOWN
 
 
 class ClassicALUShape(Polygon):
@@ -7,14 +7,14 @@ class ClassicALUShape(Polygon):
     def __init__(self, **kwargs):
         # Corners of the ALU shape
         alu_vertices = [
-            [1, 0, 0],
-            [3, 1, 0],
-            [3, 3, 0],
-            [1, 4, 0],
-            [1, 2.5, 0],
-            [1.75, 2, 0],
-            [1, 1.5, 0],
-            [1, 0, 0],
+            [0, 0, 0],
+            [2, 1, 0],
+            [2, 3, 0],
+            [0, 4, 0],
+            [0, 2.5, 0],
+            [0.5, 2, 0],
+            [0, 1.5, 0],
+            [0, 0, 0],
         ]
         super().__init__(*alu_vertices, **kwargs)
 
@@ -31,7 +31,7 @@ class ClassicALUShape(Polygon):
         return (self.get_vertices()[2] + self.get_vertices()[1]) / 2.0 + (UP * 0.75)
 
 
-class ALU(VGroup):
+class ALUZ(VGroup):
     """Starting with classic ALU Shape, adds text and lines."""
 
     def __init__(self, **kwargs):
@@ -52,8 +52,8 @@ class ALU(VGroup):
             color=WHITE,
             radius=0.05,
         )
-        self.input0_title = Text("in0", font_size=28, color=WHITE).move_to(
-            self.alu_shape.get_input0_start() + RIGHT * 0.3
+        self.input0_title = Text("in0", font_size=28, color=WHITE).next_to(
+            self.input0, RIGHT * 0.5
         )
         self.input1 = Line(
             start=self.alu_shape.get_input1_start(),
@@ -66,8 +66,8 @@ class ALU(VGroup):
             radius=0.05,
         )
         # 1.35
-        self.input1_title = Text("in1", font_size=28, color=WHITE).move_to(
-            self.alu_shape.get_input1_start() + RIGHT * 0.3
+        self.input1_title = Text("in1", font_size=28, color=WHITE).next_to(
+            self.input1, RIGHT * 0.5
         )
         self.result = Line(
             start=self.alu_shape.get_result_start(),
@@ -79,23 +79,25 @@ class ALU(VGroup):
             color=WHITE,
             radius=0.05,
         )
-        self.result_title = Text("result", font_size=28, color=WHITE).move_to(
-            self.alu_shape.get_result_start() + (LEFT * 0.5)
+        self.result_title = Text("result", font_size=28, color=WHITE).next_to(
+            self.result, LEFT * 0.5
         )
         self.zero = Line(
             start=self.alu_shape.get_zero_start(),
             end=self.alu_shape.get_zero_start() + RIGHT * 0.25,
             color=BLUE,
         )
-        self.zero_title = Text("zero", font_size=28, color=BLUE).move_to(
-            self.alu_shape.get_zero_start() + (LEFT * 0.4)
+        self.zero_title = Text("zero", font_size=28, color=BLUE).next_to(
+            self.zero, LEFT * 0.5
         )
         self.zero_dot = Dot(
             self.zero.get_end(),
             color=BLUE,
             radius=0.05,
         )
-        self.add(
+
+        self.outline_vg = VGroup()
+        self.outline_vg.add(
             self.alu_shape,
             self.input0,
             self.input0_dot,
@@ -106,7 +108,8 @@ class ALU(VGroup):
             self.zero,
             self.zero_dot,
         )
-        self.add(
+        self.title_vg = VGroup()
+        self.title_vg.add(
             self.title,
             self.input0_title,
             self.input1_title,

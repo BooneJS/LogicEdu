@@ -1,7 +1,9 @@
 from manim import Polygon, VGroup, Text, Line, Dot, WHITE, BLUE, LEFT, RIGHT, UP, DOWN
+import numpy as np
+from basics import Pin, PinSide
 
 
-class ClassicALUShape(Polygon):
+class ClassicALUZShape(Polygon):
     """Creates the classic ALU Shape."""
 
     def __init__(self, **kwargs):
@@ -36,12 +38,13 @@ class ALUZ(VGroup):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.alu_shape = ClassicALUShape()
+        self.alu_shape = ClassicALUZShape()
         self.title = (
             Text("ALU", font_size=36, color=WHITE)
             .move_to(self.alu_shape.get_center())
             .shift(DOWN * 0.65)
         )
+        self.input0_pin = Pin(pin_side=PinSide.LEFT)
         self.input0 = Line(
             start=self.alu_shape.get_input0_start(),
             end=self.alu_shape.get_input0_start() + LEFT * 0.25,

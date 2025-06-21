@@ -12,9 +12,10 @@ class PinSide(enum.Enum):
 class Pin(VGroup):
     def __init__(self, **kwargs):
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
-        self.pin_length = kwargs.pop("pin_length", 0.4)
+        self.pin_length = kwargs.pop("pin_length", 0.6)
         self.dot_radius = kwargs.pop("dot_radius", 0.05)
         self.not_bubble_radius = kwargs.pop("not_bubble_radius", 0.15 / 2)
+        self.bus_width = kwargs.pop("bus_width", 1)
         super().__init__(**kwargs)
         color = kwargs.get("color", WHITE)
 

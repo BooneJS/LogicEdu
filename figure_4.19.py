@@ -4,10 +4,13 @@ from logic_gates import *
 
 
 class ConnectorLine(VGroup):
-    def __init__(self, start, end, **kwargs):
+    def __init__(self, start_pin, end_pin, midpoint=None, **kwargs):
         super().__init__(**kwargs)
-        midpoint = (start + end) / 2
-        self.line = Line(start, end, color=WHITE)
+        if midpoint is None:
+            midpoint = (start_pin.get_connection() + end_pin.get_connection()) / 2
+        self.line = Line(
+            start_pin.get_connection(), end_pin.get_connection(), color=WHITE
+        )
         self.dot = Dot(midpoint, color=WHITE, radius=0.05)
         self.add(self.line, self.dot)
 
@@ -34,4 +37,7 @@ class DrawAnALU(Scene):
 
         self.play(FadeIn(gates_vg.move_to(base_loc + DOWN * (i * 0.6))))
 
+        # connector_line = ConnectorLine(
+        #     alu.get_output_connection(), gates_vg[0].get_input_connection()
+        # )
         self.wait(1)

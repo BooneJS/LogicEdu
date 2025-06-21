@@ -13,6 +13,7 @@ from manim import (
     ArcPolygon,
     Polygon,
 )
+from manim._config.logger_utils import set_file_logger
 from basics import *
 
 xor_shift_right = 0.15
@@ -51,12 +52,12 @@ class BinaryLogic(VGroup):
     def invert_pin(self, pin):
         pin.add_invert()
 
-    def ex_inputs(self, input0_pin, input1_pin):
+    def ex_inputs(self, input0_pin, input1_pin, angle):
         # TODO: y_intercept isn't always available
         arc = ArcBetweenPoints(
-            start=LEFT * self.y_intercept + LEFT * xor_shift_right,
-            end=UP + LEFT * self.y_intercept + LEFT * xor_shift_right,
-            radius=or_radius,
+            start=UP + LEFT * self.y_intercept + LEFT * xor_shift_right,
+            end=LEFT * self.y_intercept + LEFT * xor_shift_right,
+            angle=angle,
         )
         self.add(arc)
         new_start = input0_pin.line.get_start() + LEFT * xor_shift_right
@@ -132,7 +133,9 @@ class OR2(BinaryLogic):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bubble_radius = 1
+        print(f"name of class: {type(self).__name__}")
+        self.rear_angle = -PI / 2
+        self.bubble_angle = PI / 4
         self.y_intercept = sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
         edge_length = 0.25 + self.y_intercept
         self.arcpolygon = ArcPolygon(
@@ -143,14 +146,14 @@ class OR2(BinaryLogic):
             UP + RIGHT * edge_length,
             arc_config=[
                 {
-                    "radius": -or_radius,
+                    "angle": self.rear_angle,
                 },
                 {"angle": 0},
                 {
-                    "radius": self.bubble_radius,
+                    "angle": self.bubble_angle,
                 },
                 {
-                    "radius": self.bubble_radius,
+                    "angle": self.bubble_angle,
                 },
                 {"angle": 0},
             ],
@@ -191,7 +194,7 @@ class XOR2(OR2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ex_inputs(self.input0_pin, self.input1_pin)
+        self.ex_inputs(self.input0_pin, self.input1_pin, self.rear_angle)
 
 
 class XNOR2(XOR2):

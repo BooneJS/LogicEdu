@@ -1,5 +1,5 @@
 from manim import VGroup, Line, Dot, Scene, FadeIn, WHITE, LEFT, UP, DOWN, RIGHT
-from alu import *
+from blocks import *
 from logic_gates import *
 
 

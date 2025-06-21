@@ -52,6 +52,7 @@ class BinaryLogic(VGroup):
         pin.add_invert()
 
     def ex_inputs(self, input0_pin, input1_pin):
+        # TODO: y_intercept isn't always available
         arc = ArcBetweenPoints(
             start=LEFT * self.y_intercept + LEFT * xor_shift_right,
             end=UP + LEFT * self.y_intercept + LEFT * xor_shift_right,

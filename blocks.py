@@ -58,89 +58,39 @@ class ALUZ(VGroup):
             .move_to(self.alu_shape.get_center())
             .shift(DOWN * 0.65)
         )
-        self.input0_pin = Pin(pin_side=PinSide.LEFT)
-        self.input0 = Line(
-            start=self.alu_shape.get_input0_start(),
-            end=self.alu_shape.get_input0_start() + LEFT * 0.25,
-            color=WHITE,
-        )
-        self.input0_dot = Dot(
-            self.input0.get_end(),
-            color=WHITE,
-            radius=0.05,
-        )
-        self.input0_title = Text("in0", font_size=28, color=WHITE).next_to(
-            self.input0, RIGHT * 0.5
-        )
-        self.input1 = Line(
-            start=self.alu_shape.get_input1_start(),
-            end=(self.alu_shape.get_input1_start() + LEFT * 0.25),
-            color=WHITE,
-        )
-        self.input1_dot = Dot(
-            self.input1.get_end(),
-            color=WHITE,
-            radius=0.05,
-        )
-        # 1.35
-        self.input1_title = Text("in1", font_size=28, color=WHITE).next_to(
-            self.input1, RIGHT * 0.5
-        )
-        self.result = Line(
-            start=self.alu_shape.get_result_start(),
-            end=(self.alu_shape.get_result_start() + RIGHT * 0.25),
-            color=WHITE,
-        )
-        self.result_dot = Dot(
-            self.result.get_end(),
-            color=WHITE,
-            radius=0.05,
-        )
-        self.result_title = Text("result", font_size=28, color=WHITE).next_to(
-            self.result, LEFT * 0.5
-        )
-        self.zero = Line(
-            start=self.alu_shape.get_zero_start(),
-            end=self.alu_shape.get_zero_start() + RIGHT * 0.25,
-            color=BLUE,
-        )
-        self.zero_title = Text("zero", font_size=28, color=BLUE).next_to(
-            self.zero, LEFT * 0.5
-        )
-        self.zero_dot = Dot(
-            self.zero.get_end(),
-            color=BLUE,
-            radius=0.05,
-        )
+        self.input0_pin = Pin(
+            pin_side=PinSide.LEFT, label="in0", show_label=True
+        ).shift(self.alu_shape.get_input0_start())
+        self.input1_pin = Pin(
+            pin_side=PinSide.LEFT, label="in1", show_label=True
+        ).shift(self.alu_shape.get_input1_start())
+        self.result_pin = Pin(
+            pin_side=PinSide.RIGHT, label="result", show_label=True
+        ).shift(self.alu_shape.get_result_start())
+        self.zero_pin = Pin(
+            pin_side=PinSide.RIGHT, label="zero", show_label=True, color=BLUE
+        ).shift(self.alu_shape.get_zero_start())
 
         self.add(
             self.alu_shape,
-            self.input0,
-            self.input0_dot,
-            self.input1,
-            self.input1_dot,
-            self.result,
-            self.result_dot,
-            self.zero,
-            self.zero_dot,
+            self.input0_pin,
+            self.input1_pin,
+            self.result_pin,
+            self.zero_pin,
             self.title,
-            self.input0_title,
-            self.input1_title,
-            self.result_title,
-            self.zero_title,
         )
 
     def get_input0_connection(self):
-        return self.input0_dot.get_center()
+        return self.input0_pin.get_connection()
 
     def get_input1_connection(self):
-        return self.input1_dot.get_center()
+        return self.input1_pin.get_connection()
 
     def get_result_connection(self):
-        return self.result.get_end()
+        return self.result_pin.get_connection()
 
     def get_zero_connection(self):
-        return self.zero_dot.get_center()
+        return self.zero_pin.get_connection()
 
 
 class Mux(VGroup):

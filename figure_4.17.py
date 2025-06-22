@@ -40,7 +40,7 @@ class DrawAnALU(Scene):
         mux.move_to(LEFT * 5 + DOWN * 1.5)
         self.play(Create(mux))
 
-        mux = Mux(num_inputs=4)
+        mux = Mux(num_inputs=3)
         mux.move_to(LEFT * 5 + UP * 1.50)
         self.play(Create(mux))
 

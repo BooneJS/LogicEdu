@@ -1,4 +1,16 @@
-from manim import VGroup, Line, Dot, Circle, WHITE, LEFT, RIGHT, UP, DOWN, ORIGIN
+from manim import (
+    VGroup,
+    Line,
+    Dot,
+    Circle,
+    WHITE,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    ORIGIN,
+    Text,
+)
 import enum
 
 
@@ -12,6 +24,7 @@ class PinSide(enum.Enum):
 class Pin(VGroup):
     def __init__(self, **kwargs):
         self.label = kwargs.pop("label", "")
+        self.show_label = kwargs.pop("show_label", False)
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
         self.pin_length = kwargs.pop("pin_length", 0.6)
         self.dot_radius = kwargs.pop("dot_radius", 0.05)
@@ -20,7 +33,6 @@ class Pin(VGroup):
         super().__init__(**kwargs)
         color = kwargs.get("color", WHITE)
 
-        # LEFT
         match self.pin_side:
             case PinSide.LEFT:
                 end = LEFT * self.pin_length
@@ -42,6 +54,20 @@ class Pin(VGroup):
             radius=self.dot_radius,
         )
         self.add(self.line, self.dot)
+        if self.show_label:
+            self.label = Text(self.label, font_size=28, color=color).next_to(
+                self.line, RIGHT * 0.5
+            )
+            match self.pin_side:
+                case PinSide.LEFT:
+                    self.label.next_to(self.line, RIGHT * 0.5)
+                case PinSide.RIGHT:
+                    self.label.next_to(self.line, LEFT * 0.5)
+                case PinSide.TOP:
+                    self.label.next_to(self.line, DOWN * 0.5)
+                case PinSide.BOTTOM:
+                    self.label.next_to(self.line, UP * 0.5)
+            self.add(self.label)
 
     def add_invert(self, color=WHITE):
         self.circle = Circle(

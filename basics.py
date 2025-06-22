@@ -6,11 +6,12 @@ class PinSide(enum.Enum):
     LEFT = 1
     RIGHT = 2
     TOP = 3
-    BOTTOM = 3
+    BOTTOM = 4
 
 
 class Pin(VGroup):
     def __init__(self, **kwargs):
+        self.label = kwargs.pop("label", "")
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
         self.pin_length = kwargs.pop("pin_length", 0.6)
         self.dot_radius = kwargs.pop("dot_radius", 0.05)
@@ -20,13 +21,15 @@ class Pin(VGroup):
         color = kwargs.get("color", WHITE)
 
         # LEFT
-        end = LEFT * self.pin_length
-        if self.pin_side == PinSide.RIGHT:
-            end = RIGHT * self.pin_length
-        elif self.pin_side == PinSide.TOP:
-            end = UP * self.pin_length
-        elif self.pin_side == PinSide.BOTTOM:
-            end = DOWN * self.pin_length
+        match self.pin_side:
+            case PinSide.LEFT:
+                end = LEFT * self.pin_length
+            case PinSide.RIGHT:
+                end = RIGHT * self.pin_length
+            case PinSide.TOP:
+                end = UP * self.pin_length
+            case PinSide.BOTTOM:
+                end = DOWN * self.pin_length
 
         self.line = Line(
             start=ORIGIN,

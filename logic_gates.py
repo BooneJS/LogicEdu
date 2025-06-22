@@ -1,5 +1,4 @@
 from math import sqrt
-from turtle import Shape
 from manim import (
     VGroup,
     Circle,
@@ -121,8 +120,8 @@ class UnaryLogic(VGroup):
 class BinaryLogic(VGroup):
     def __init__(self, logic_type: LogicType, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
-        self.logic_type = logic_type
         super().__init__(**kwargs)
+        self.logic_type = logic_type
         self.rear_angle = kwargs.pop(
             "rear_angle", -PI / 2
         )  # OR symbol with concave back
@@ -144,6 +143,13 @@ class BinaryLogic(VGroup):
         self.add(*self.outputs)
         self.shape = ShapeFactory.create_shape(self.logic_type)
         self.add(self.shape)
+
+        # Handle Inverting output and Exclusive OR Inputs
+        match self.logic_type:
+            case LogicType.NAND | LogicType.NOR | LogicType.XNOR:
+                self.invert_output()
+            case LogicType.XOR | LogicType.XNOR:
+                self.ex_inputs()
 
     def invert_output(self):
         self.outputs[0].add_invert()
@@ -195,7 +201,7 @@ class NAND2(AND2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.invert_output()
+        # self.invert_output()
 
 
 class OR2(BinaryLogic):
@@ -204,9 +210,6 @@ class OR2(BinaryLogic):
     def __init__(self, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(LogicType.OR, **kwargs)
-        self.add(
-            self.shape,
-        )
 
 
 class NOR2(OR2):

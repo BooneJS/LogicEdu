@@ -1,4 +1,18 @@
-from manim import VGroup, Line, Dot, Scene, FadeIn, WHITE, LEFT, UP, DOWN, RIGHT
+from manim import (
+    VGroup,
+    Line,
+    Dot,
+    Scene,
+    FadeIn,
+    WHITE,
+    LEFT,
+    UP,
+    DOWN,
+    RIGHT,
+    Create,
+    ImageMobject,
+)
+
 from blocks import *
 from logic_gates import *
 
@@ -20,16 +34,23 @@ class DrawAnALU(Scene):
         # Define the vertices of the custom polygon
         # Create the polygon using the defined vertices
         alu = ALUZ()
-        alu_loc = LEFT * 5 + UP * 1.5
+        alu.scale(0.5).move_to(LEFT * 3 + DOWN)
+
+        mux = Mux()
+        mux.move_to(LEFT * 5 + DOWN * 1.5)
+        self.play(Create(mux))
+
+        mux = Mux(num_inputs=4)
+        mux.move_to(LEFT * 5 + UP * 1.50)
+        self.play(Create(mux))
 
         # Add the shape to the scene and play a creation animation
-        self.play(FadeIn(alu.outline_vg.move_to(alu_loc)))
-        self.play(FadeIn(alu.title_vg.move_to(alu_loc)))
+        self.play(Create(alu))
 
         gates_vg = VGroup()
 
-        base_loc = UP * 4.3
-        scale = 0.8
+        base_loc = UP * 4.2
+        scale = 0.5
         for i, gate in enumerate(all_gates):
             gate.scale(scale)
             gate.move_to(base_loc + DOWN * (i * (scale + 0.1)))

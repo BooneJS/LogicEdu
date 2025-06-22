@@ -1,5 +1,19 @@
-from manim import Polygon, VGroup, Text, Line, Dot, WHITE, BLUE, LEFT, RIGHT, UP, DOWN
+from manim import (
+    Polygon,
+    VGroup,
+    Text,
+    Line,
+    Dot,
+    WHITE,
+    BLUE,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    ORIGIN,
+)
 import numpy as np
+from typing import List
 from basics import Pin, PinSide
 
 
@@ -99,8 +113,7 @@ class ALUZ(VGroup):
             radius=0.05,
         )
 
-        self.outline_vg = VGroup()
-        self.outline_vg.add(
+        self.add(
             self.alu_shape,
             self.input0,
             self.input0_dot,
@@ -110,9 +123,6 @@ class ALUZ(VGroup):
             self.result_dot,
             self.zero,
             self.zero_dot,
-        )
-        self.title_vg = VGroup()
-        self.title_vg.add(
             self.title,
             self.input0_title,
             self.input1_title,
@@ -131,3 +141,39 @@ class ALUZ(VGroup):
 
     def get_zero_connection(self):
         return self.zero_dot.get_center()
+
+
+class Mux(VGroup):
+    """Creates a Mux block."""
+
+    def __init__(self, **kwargs):
+        self.num_inputs = kwargs.pop("num_inputs", 2)
+        super().__init__(**kwargs)
+        step = 0.25
+        height = 2 * step + (self.num_inputs - 1) * step
+        self.inputs: List[Pin] = []
+        self.outputs: List[Pin] = []
+        self.shape = Polygon(
+            ORIGIN,
+            UP * step + RIGHT * step,
+            UP * (height - step) + RIGHT * step,
+            UP * height,
+            color=WHITE,
+        )
+        self.add(self.shape)
+        for i, input in enumerate(range(self.num_inputs)):
+            self.inputs.append(Pin(pin_side=PinSide.LEFT).shift(UP * step * (i + 1)))
+            label = Text(f"{i}", font_size=14, color=WHITE).next_to(
+                self.inputs[i], RIGHT * step
+            )
+            self.add(label)
+        self.outputs.append(
+            Pin(pin_side=PinSide.RIGHT, label=f"{i}").shift(
+                UP * (height / 2) + RIGHT * step
+            )
+        )
+        start = (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
+        print(f"start: {start}")
+        self.inputs.append(Pin(pin_side=PinSide.BOTTOM, label="sel").shift(start))
+
+        self.add(*self.inputs, *self.outputs)

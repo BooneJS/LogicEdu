@@ -80,17 +80,17 @@ class ALUZ(VGroup):
             self.title,
         )
 
-    def get_input0_connection(self):
-        return self.input0_pin.get_connection()
+    def get_input0_connection(self) -> Pin:
+        return self.input0_pin
 
-    def get_input1_connection(self):
-        return self.input1_pin.get_connection()
+    def get_input1_connection(self) -> Pin:
+        return self.input1_pin
 
-    def get_result_connection(self):
-        return self.result_pin.get_connection()
+    def get_result_connection(self) -> Pin:
+        return self.result_pin
 
-    def get_zero_connection(self):
-        return self.zero_pin.get_connection()
+    def get_zero_connection(self) -> Pin:
+        return self.zero_pin
 
 
 class Mux(VGroup):

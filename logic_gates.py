@@ -298,17 +298,17 @@ class BinaryLogic(VGroup):
                 pin.line.get_end(),
             )
 
-    def get_input0_connection(self):
-        """Return the input0 dot center."""
-        return self.inputs[0].get_connection()
+    def get_input0_connection(self) -> Pin:
+        """Return the input0 Pin."""
+        return self.inputs[0]
 
-    def get_input1_connection(self):
-        """Return the input1 dot center."""
-        return self.inputs[0].get_connection()
+    def get_input1_connection(self) -> Pin:
+        """Return the input1 Pin."""
+        return self.inputs[0]
 
-    def get_output_connection(self):
-        """Return the output dot center."""
-        return self.outputs[0].get_connection()
+    def get_output_connection(self) -> Pin:
+        """Return the output Pin."""
+        return self.outputs[0]
 
     def get_input_count(self):
         return len(self.inputs)

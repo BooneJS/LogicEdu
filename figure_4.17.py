@@ -18,21 +18,18 @@ from logic_gates import *
 
 
 class ConnectorLine(VGroup):
-    def __init__(self, start_pin, end_pin, midpoint=None, **kwargs):
+    def __init__(self, start_pin: Pin, end_pin: Pin, midpoint=None, **kwargs):
         super().__init__(**kwargs)
-        if midpoint is None:
-            midpoint = (start_pin.get_connection() + end_pin.get_connection()) / 2
-        self.line = Line(
-            start_pin.get_connection(), end_pin.get_connection(), color=WHITE
-        )
-        self.dot = Dot(midpoint, color=WHITE, radius=0.05)
-        self.add(self.line, self.dot)
+        print(f"Connecting: {start_pin} to {end_pin}")
+        # if midpoint is None:
+        #    midpoint = (start_pin.get_connection() + end_pin.get_connection()) / 2
+        self.line = Line(start_pin.line.get_end(), end_pin.line.get_end(), color=BLUE)
+        # self.dot = Dot(midpoint, color=WHITE, radius=0.05)
+        self.add(self.line)
 
 
 class DrawAnALU(Scene):
     def construct(self):
-        # Define the vertices of the custom polygon
-        # Create the polygon using the defined vertices
         alu = ALUZ()
         alu.scale(0.5).move_to(LEFT * 3 + DOWN)
 
@@ -58,7 +55,13 @@ class DrawAnALU(Scene):
 
         self.play(FadeIn(gates_vg.move_to(base_loc + DOWN * (i * 0.6))))
 
-        # connector_line = ConnectorLine(
-        #     alu.get_output_connection(), gates_vg[0].get_input_connection()
-        # )
+        wires = VGroup()
+        wires.add(
+            ConnectorLine(
+                alu.get_result_connection(), gates_vg[0].get_input0_connection()
+            )
+        )
+
+        self.play(Create(wires))
+
         self.wait(1)

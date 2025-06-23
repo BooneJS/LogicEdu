@@ -12,6 +12,7 @@ from manim import (
     Text,
 )
 import enum
+from manim.typing import Point3DLike
 import numpy as np
 
 
@@ -89,6 +90,3 @@ class Pin(VGroup):
             new_start = self.line.get_start() + DOWN * self.not_bubble_radius * 2
         self.add(self.circle)
         self.line.put_start_and_end_on(new_start, self.line.get_end())
-
-    def get_connection(self):
-        return self.line.get_end()

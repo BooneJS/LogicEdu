@@ -193,3 +193,12 @@ class DFF(VGroup):
 
     def get_q_connection(self) -> Pin:
         return self.q_pin
+
+    def get_clk_connection(self) -> Pin:
+        return self.clk_pin
+
+    def get_r_connection(self) -> Pin:
+        return self.r_pin
+
+    def get_s_connection(self) -> Pin:
+        return self.s_pin

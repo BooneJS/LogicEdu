@@ -13,19 +13,9 @@ from manim import (
     ImageMobject,
 )
 
+from basics import ConnectorLine, GRID, grid_round
 from blocks import *
 from logic_gates import *
-
-
-class ConnectorLine(VGroup):
-    def __init__(self, start_pin: Pin, end_pin: Pin, midpoint=None, **kwargs):
-        super().__init__(**kwargs)
-        print(f"Connecting: {start_pin} to {end_pin}")
-        # if midpoint is None:
-        #    midpoint = (start_pin.get_connection() + end_pin.get_connection()) / 2
-        self.line = Line(start_pin.line.get_end(), end_pin.line.get_end(), color=BLUE)
-        # self.dot = Dot(midpoint, color=WHITE, radius=0.05)
-        self.add(self.line)
 
 
 class DrawAnALU(Scene):
@@ -35,15 +25,15 @@ class DrawAnALU(Scene):
 
         dff = DFF(variant=DFFVariant.DFF).scale(0.75)
         dff.move_to(LEFT * 5 + UP * 3)
-        self.play(Create(dff))
+        self.play(FadeIn(dff))
 
-        dff = DFF(variant=DFFVariant.DFF_R).scale(0.75)
-        dff.move_to(LEFT * 5 + UP * 1)
-        self.play(Create(dff))
+        dffr = DFF(variant=DFFVariant.DFF_R).scale(0.75)
+        dffr.move_to(LEFT * 5 + UP * 1)
+        self.play(FadeIn(dffr))
 
-        dff = DFF(variant=DFFVariant.DFF_SR).scale(0.75)
-        dff.move_to(LEFT * 5 + DOWN * 1)
-        self.play(Create(dff))
+        dffsr = DFF(variant=DFFVariant.DFF_SR).scale(0.75)
+        dffsr.move_to(LEFT * 5 + DOWN * 1)
+        self.play(FadeIn(dffsr))
 
         # mux = Mux()
         # mux.move_to(LEFT * 5 + DOWN * 1.5)
@@ -70,13 +60,26 @@ class DrawAnALU(Scene):
         wires = VGroup()
         wires.add(
             ConnectorLine(
-                alu.get_result_connection(), gates_vg[0].get_input0_connection()
-            )
+                alu.get_result_connection(),
+                gates_vg[0].get_input1_connection(),
+                manhatten=True,
+                x_axis_shift=GRID,
+            ),
         )
         wires.add(
             ConnectorLine(
-                alu.get_zero_connection(), gates_vg[5].get_input0_connection()
-            )
+                alu.get_zero_connection(),
+                gates_vg[0].get_input0_connection(),
+                manhatten=True,
+            ),
+        )
+
+        wires.add(
+            ConnectorLine(
+                dff.get_q_connection(),
+                gates_vg[1].get_input0_connection(),
+                segmented=True,
+            ),
         )
 
         self.play(Create(wires))

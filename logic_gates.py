@@ -304,7 +304,7 @@ class BinaryLogic(VGroup):
 
     def get_input1_connection(self) -> Pin:
         """Return the input1 Pin."""
-        return self.inputs[0]
+        return self.inputs[1]
 
     def get_output_connection(self) -> Pin:
         """Return the output Pin."""

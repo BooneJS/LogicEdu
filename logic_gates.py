@@ -12,10 +12,13 @@ from manim import (
     ArcBetweenPoints,
     ArcPolygon,
     Polygon,
+    DEGREES,
 )
-from basics import *
+from manim.typing import Point3DLike
+from basics import Pin, PinSide
 from typing import List
 import enum
+import numpy as np
 
 
 class LogicType(enum.Enum):
@@ -30,76 +33,159 @@ class LogicType(enum.Enum):
 
 
 class ShapeFactory:
+    """Creates shapes for logic gates per MIL-STD-806B."""
 
     @staticmethod
-    def create_shape(logic_type: LogicType, **kwargs):
-        y_intercept = kwargs.pop(
-            "y_intercept", sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
-        )
-        edge_length = kwargs.pop("edge_length", 0.25 + y_intercept)
-        rear_angle = kwargs.pop("rear_angle", -PI / 2)
-        bubble_angle = kwargs.pop("bubble_angle", PI / 4)
+    def or_radius() -> float:
+        return 0.8
 
+    @staticmethod
+    def gate_dim() -> float:
+        return 0.8
+
+    @staticmethod
+    def arc2d_radius_to_angle(
+        radius: float, chord_start: Point3DLike, chord_end: Point3DLike
+    ) -> float:
+        chord_len = np.linalg.norm(np.array(chord_start) - np.array(chord_end))
+        return 2 * np.arcsin(chord_len / (2 * radius))
+
+    @staticmethod
+    def or_edge_len() -> float:
+        return 0.3
+
+    @staticmethod
+    def buf_side_len() -> float:
+        return 0.7
+
+    @staticmethod
+    def and_radius() -> float:
+        return ShapeFactory.gate_dim() / 2
+
+    @staticmethod
+    def and_edge_len() -> float:
+        return 0.6
+
+    @staticmethod
+    def edge_to_pin() -> float:
+        return 0.15
+
+    @staticmethod
+    def between_pins(pin_count: int = 2) -> float:
+        return 0.25 if pin_count > 2 else 0.5
+
+    @staticmethod
+    def ex_offset() -> float:
+        return 0.15
+
+    @staticmethod
+    def pin_length() -> float:
+        return 0.4
+
+    @staticmethod
+    def solve_for_y_intercept(radius: float, y: float) -> float:
+        return np.sqrt(radius**2 - y**2)
+
+    @staticmethod
+    def create_shape(logic_type: LogicType, **kwargs) -> ArcPolygon:
         match logic_type:
             case LogicType.AND | LogicType.NAND:
+                lower_arc_start = RIGHT * ShapeFactory.and_edge_len()
+                midpoint = (
+                    lower_arc_start
+                    + RIGHT * ShapeFactory.and_radius()
+                    + UP * ShapeFactory.and_radius()
+                )
+                upper_arc_end = lower_arc_start + LOGIC_UP
+                lower_angle = ShapeFactory.arc2d_radius_to_angle(
+                    ShapeFactory.and_radius(), lower_arc_start, midpoint
+                )
+                upper_angle = ShapeFactory.arc2d_radius_to_angle(
+                    ShapeFactory.and_radius(), midpoint, upper_arc_end
+                )
                 return ArcPolygon(
                     ORIGIN,
-                    RIGHT * 0.5,
-                    UP + RIGHT * 0.5,
-                    UP,
+                    lower_arc_start,
+                    midpoint,
+                    upper_arc_end,
+                    LOGIC_UP,
                     arc_config=[
                         {"angle": 0},
-                        {
-                            "angle": PI / 2,
-                            "radius": 0.5,
-                        },
+                        {"angle": lower_angle},
+                        {"angle": upper_angle},
                         {"angle": 0},
                         {"angle": 0},
                     ],
                     color=WHITE,
                 )
             case LogicType.OR | LogicType.NOR | LogicType.XOR | LogicType.XNOR:
+
+                # OR's rear arc has 0 offset at midpoint, but 'left_shift' at the start/end.
+                left_shift = LEFT * (
+                    0.8
+                    - ShapeFactory.solve_for_y_intercept(
+                        ShapeFactory.or_radius(), ShapeFactory.gate_dim() / 2
+                    )
+                )
                 return ArcPolygon(
-                    UP + LEFT * y_intercept,
-                    ORIGIN + LEFT * y_intercept,
-                    RIGHT * edge_length,
-                    UP * 0.5 + RIGHT,
-                    UP + RIGHT * edge_length,
+                    left_shift,
+                    RIGHT * ShapeFactory.or_edge_len(),
+                    LOGIC_UP / 2 + RIGHT,
+                    LOGIC_UP + RIGHT * ShapeFactory.or_edge_len(),
+                    LOGIC_UP + left_shift,
                     arc_config=[
-                        {
-                            "angle": rear_angle,
-                        },
                         {"angle": 0},
-                        {
-                            "angle": bubble_angle,
-                        },
-                        {
-                            "angle": bubble_angle,
-                        },
+                        {"radius": ShapeFactory.or_radius()},
+                        {"radius": ShapeFactory.or_radius()},
                         {"angle": 0},
+                        {"radius": -ShapeFactory.or_radius()},
                     ],
                     color=WHITE,
                 )
             case LogicType.BUF | LogicType.INV:
-                return Polygon(ORIGIN, RIGHT + UP * 0.5, UP, color=WHITE)
+                buf_up = UP * ShapeFactory.buf_side_len() / 2
+                buf_right = RIGHT * sqrt(
+                    ShapeFactory.buf_side_len() ** 2
+                    - (ShapeFactory.buf_side_len() / 2) ** 2
+                )
+                return ArcPolygon(
+                    ORIGIN,
+                    buf_up + buf_right,
+                    UP * ShapeFactory.buf_side_len(),
+                    arc_config=[
+                        {"angle": 0},
+                        {"angle": 0},
+                        {"angle": 0},
+                    ],
+                    color=WHITE,
+                )
+
+
+LOGIC_UP = UP * ShapeFactory.gate_dim()
+LOGIC_DOWN = DOWN * ShapeFactory.gate_dim()
 
 
 class UnaryLogic(VGroup):
+    """Creates shapes for unary logic gates per MIL-STD-806B."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.xor_shift_right = kwargs.pop("xor_shift_right", 0.15)
-        self.or_radius = kwargs.pop("or_radius", 0.75)
-        self.pin_length = kwargs.pop("pin_length", 0.4)
         self.inputs: List[Pin] = []
         self.outputs: List[Pin] = []
-        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 2))
+
+        self.shape = ShapeFactory.create_shape(LogicType.INV)
+        self.add(self.shape)
+
+        self.inputs.append(
+            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP * self.get_height() / 2)
+        )
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
+            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(
+                UP * self.get_height() / 2 + RIGHT * self.shape.get_width()
+            )
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
-        self.shape = ShapeFactory.create_shape(LogicType.INV)
-        self.add(self.shape)
 
     def invert_output(self):
         self.outputs[0].add_invert()
@@ -116,33 +202,59 @@ class UnaryLogic(VGroup):
     def get_output_count(self):
         return len(self.outputs)
 
+    def get_height(self):
+        return self.shape.get_height()
+
 
 class BinaryLogic(VGroup):
     def __init__(self, logic_type: LogicType, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(**kwargs)
         self.logic_type = logic_type
-        self.rear_angle = kwargs.pop(
-            "rear_angle", -PI / 2
-        )  # OR symbol with concave back
-        self.bubble_angle = kwargs.pop(
-            "bubble_angle", PI / 4
-        )  # OR symbol with acute angled nose
-        self.y_intercept = sqrt(1 - ((1 / 4) ** 2)) - sqrt(1 - ((1 / 2) ** 2)) + 0.03
-        self.xor_shift_right = kwargs.pop("xor_shift_right", 0.15)
-        self.or_radius = kwargs.pop("or_radius", 0.75)
-        self.pin_length = kwargs.pop("pin_length", 0.4)
+
+        pin_starts = List[Point3DLike]
+        outer_pin_intercept = 0  # AND shapes
+        if self.logic_type == LogicType.OR:
+            outer_pin_intercept = (
+                ShapeFactory.or_radius()
+                - ShapeFactory.solve_for_y_intercept(
+                    ShapeFactory.or_radius(),
+                    ShapeFactory.gate_dim() / 2 - ShapeFactory.edge_to_pin(),
+                )
+            )
         self.inputs: List[Pin] = []
         self.outputs: List[Pin] = []
-        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / (4 / 3)))
-        self.inputs.append(Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP / 4))
+
+        self.shape = ShapeFactory.create_shape(self.logic_type)
+        self.add(self.shape)
+
+        # Create Input Pins for 2 or 3 input gates.
+        # Input 0 measures down from the top of the gate.
+        self.inputs.append(
+            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
+                LOGIC_UP
+                + DOWN * ShapeFactory.edge_to_pin()
+                + LEFT * outer_pin_intercept
+            )
+        )
+        # If there's more than 2 inputs, add the second input to the middle
+        if self.num_inputs > 2:
+            self.inputs.append(
+                Pin(pin_side=PinSide.LEFT, color=WHITE).shift(LOGIC_UP / 2)
+            )
+
+        # The last input measures up from the bottom of the gate.
+        self.inputs.append(
+            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
+                UP * ShapeFactory.edge_to_pin() + LEFT * outer_pin_intercept
+            )
+        )
+
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(UP / 2 + RIGHT)
+            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(self.shape.arcs[1].get_end())
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
-        self.shape = ShapeFactory.create_shape(self.logic_type)
-        self.add(self.shape)
 
         # Handle Inverting output and Exclusive OR Inputs
         match self.logic_type:
@@ -156,16 +268,15 @@ class BinaryLogic(VGroup):
 
     def ex_inputs(self):
         ex = ArcBetweenPoints(
-            start=UP + LEFT * self.y_intercept + LEFT * self.xor_shift_right,
-            end=LEFT * self.y_intercept + LEFT * self.xor_shift_right,
-            angle=self.rear_angle,
-        )
+            start=LOGIC_UP, end=ORIGIN, radius=-ShapeFactory.or_radius()
+        ).shift(2 * LEFT * ShapeFactory.ex_offset())
         self.add(ex)
-        new_start = self.inputs[0].line.get_start() + LEFT * self.xor_shift_right
+        new_start = self.inputs[0].line.get_start() + LEFT * ShapeFactory.ex_offset()
+        print(f"new_start: {new_start}")
         self.inputs[0].line.put_start_and_end_on(
             new_start, self.inputs[0].line.get_end()
         )
-        new_start = self.inputs[1].line.get_start() + LEFT * self.xor_shift_right
+        new_start = self.inputs[1].line.get_start() + LEFT * ShapeFactory.ex_offset()
         self.inputs[1].line.put_start_and_end_on(
             new_start, self.inputs[1].line.get_end()
         )
@@ -252,12 +363,12 @@ class INV(BUF):
 
 
 all_gates = [
-    AND2(),
-    NAND2(),
-    OR2(),
-    NOR2(),
-    XOR2(),
-    XNOR2(),
+    AND2(num_inputs=2),
+    NAND2(num_inputs=3),
+    OR2(num_inputs=2),
+    NOR2(num_inputs=3),
+    XOR2(num_inputs=2),
+    XNOR2(num_inputs=3),
     BUF(),
     INV(),
 ]

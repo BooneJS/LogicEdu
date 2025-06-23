@@ -12,6 +12,7 @@ from manim import (
     Text,
 )
 import enum
+import numpy as np
 
 
 class PinSide(enum.Enum):

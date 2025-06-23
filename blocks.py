@@ -123,7 +123,6 @@ class Mux(VGroup):
             )
         )
         start = (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
-        print(f"start: {start}")
         self.inputs.append(Pin(pin_side=PinSide.BOTTOM, label="sel").shift(start))
 
         self.add(*self.inputs, *self.outputs)

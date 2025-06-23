@@ -50,7 +50,7 @@ class DrawAnALU(Scene):
         gates_vg = VGroup()
 
         base_loc = UP * 4.2
-        scale = 0.5
+        scale = 0.75
         for i, gate in enumerate(all_gates):
             gate.scale(scale)
             gate.move_to(base_loc + DOWN * (i * (scale + 0.1)))

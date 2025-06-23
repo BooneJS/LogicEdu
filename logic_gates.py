@@ -117,6 +117,7 @@ class ShapeFactory:
                         {"angle": 0},
                     ],
                     color=WHITE,
+                    **kwargs,
                 )
             case LogicType.OR | LogicType.NOR | LogicType.XOR | LogicType.XNOR:
 
@@ -141,6 +142,7 @@ class ShapeFactory:
                         {"radius": -ShapeFactory.or_radius()},
                     ],
                     color=WHITE,
+                    **kwargs,
                 )
             case LogicType.BUF | LogicType.INV:
                 buf_up = UP * ShapeFactory.buf_side_len() / 2
@@ -158,6 +160,7 @@ class ShapeFactory:
                         {"angle": 0},
                     ],
                     color=WHITE,
+                    **kwargs,
                 )
 
 
@@ -232,9 +235,7 @@ class BinaryLogic(VGroup):
         # Input 0 measures down from the top of the gate.
         self.inputs.append(
             Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
-                LOGIC_UP
-                + DOWN * ShapeFactory.edge_to_pin()
-                + LEFT * outer_pin_intercept
+                LOGIC_UP + DOWN * ShapeFactory.edge_to_pin()
             )
         )
         # If there's more than 2 inputs, add the second input to the middle
@@ -246,8 +247,19 @@ class BinaryLogic(VGroup):
         # The last input measures up from the bottom of the gate.
         self.inputs.append(
             Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
-                UP * ShapeFactory.edge_to_pin() + LEFT * outer_pin_intercept
+                UP * ShapeFactory.edge_to_pin()
             )
+        )
+
+        # Shorten the outermost input pins.
+        self.inputs[0].line.put_start_and_end_on(
+            self.inputs[0].line.get_start() + LEFT * outer_pin_intercept,
+            self.inputs[0].line.get_end(),
+        )
+        self.inputs[self.num_inputs - 1].line.put_start_and_end_on(
+            self.inputs[self.num_inputs - 1].line.get_start()
+            + LEFT * outer_pin_intercept,
+            self.inputs[self.num_inputs - 1].line.get_end(),
         )
 
         self.outputs.append(
@@ -267,19 +279,24 @@ class BinaryLogic(VGroup):
         self.outputs[0].add_invert()
 
     def ex_inputs(self):
+        left_shift = LEFT * (
+            0.8
+            - ShapeFactory.solve_for_y_intercept(
+                ShapeFactory.or_radius(), ShapeFactory.gate_dim() / 2
+            )
+        )
         ex = ArcBetweenPoints(
-            start=LOGIC_UP, end=ORIGIN, radius=-ShapeFactory.or_radius()
-        ).shift(2 * LEFT * ShapeFactory.ex_offset())
+            start=LOGIC_UP + left_shift,
+            end=left_shift,
+            radius=-ShapeFactory.or_radius(),
+        ).shift(LEFT * ShapeFactory.ex_offset())
         self.add(ex)
-        new_start = self.inputs[0].line.get_start() + LEFT * ShapeFactory.ex_offset()
-        print(f"new_start: {new_start}")
-        self.inputs[0].line.put_start_and_end_on(
-            new_start, self.inputs[0].line.get_end()
-        )
-        new_start = self.inputs[1].line.get_start() + LEFT * ShapeFactory.ex_offset()
-        self.inputs[1].line.put_start_and_end_on(
-            new_start, self.inputs[1].line.get_end()
-        )
+
+        for pin in self.inputs:
+            pin.line.put_start_and_end_on(
+                pin.line.get_start() + LEFT * ShapeFactory.ex_offset(),
+                pin.line.get_end(),
+            )
 
     def get_input0_connection(self):
         """Return the input0 dot center."""
@@ -319,7 +336,6 @@ class OR2(BinaryLogic):
     """Create a custom OR2 shape."""
 
     def __init__(self, **kwargs):
-        self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(LogicType.OR, **kwargs)
 
 

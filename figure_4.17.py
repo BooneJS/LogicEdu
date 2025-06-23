@@ -78,7 +78,7 @@ class DrawAnALU(Scene):
             ConnectorLine(
                 dff.get_q_connection(),
                 gates_vg[1].get_input0_connection(),
-                segmented=True,
+                manhatten=True,
             ),
         )
 

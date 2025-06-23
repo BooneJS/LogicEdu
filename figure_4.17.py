@@ -33,13 +33,25 @@ class DrawAnALU(Scene):
         alu = ALUZ()
         alu.scale(0.5).move_to(LEFT * 3 + DOWN)
 
-        mux = Mux()
-        mux.move_to(LEFT * 5 + DOWN * 1.5)
-        self.play(Create(mux))
+        dff = DFF(variant=DFFVariant.DFF).scale(0.75)
+        dff.move_to(LEFT * 5 + UP * 3)
+        self.play(Create(dff))
 
-        mux = Mux(num_inputs=3)
-        mux.move_to(LEFT * 5 + UP * 1.50)
-        self.play(Create(mux))
+        dff = DFF(variant=DFFVariant.DFF_R).scale(0.75)
+        dff.move_to(LEFT * 5 + UP * 1)
+        self.play(Create(dff))
+
+        dff = DFF(variant=DFFVariant.DFF_SR).scale(0.75)
+        dff.move_to(LEFT * 5 + DOWN * 1)
+        self.play(Create(dff))
+
+        # mux = Mux()
+        # mux.move_to(LEFT * 5 + DOWN * 1.5)
+        # self.play(Create(mux))
+
+        # mux = Mux(num_inputs=5)
+        # mux.move_to(LEFT * 5 + UP * 1.50).scale(0.75)
+        # self.play(Create(mux))
 
         # Add the shape to the scene and play a creation animation
         self.play(Create(alu))
@@ -59,6 +71,11 @@ class DrawAnALU(Scene):
         wires.add(
             ConnectorLine(
                 alu.get_result_connection(), gates_vg[0].get_input0_connection()
+            )
+        )
+        wires.add(
+            ConnectorLine(
+                alu.get_zero_connection(), gates_vg[5].get_input0_connection()
             )
         )
 

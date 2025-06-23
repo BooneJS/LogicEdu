@@ -1,3 +1,4 @@
+import enum
 from manim import (
     Polygon,
     VGroup,
@@ -111,11 +112,11 @@ class Mux(VGroup):
             color=WHITE,
         )
         self.add(self.shape)
-        for i, input in enumerate(range(self.num_inputs)):
+        for i in range(self.num_inputs):
             self.inputs.append(Pin(pin_side=PinSide.LEFT).shift(UP * step * (i + 1)))
-            label = Text(f"{i}", font_size=14, color=WHITE).next_to(
-                self.inputs[i], RIGHT * step
-            )
+            label = Text(
+                f"{self.num_inputs - 1 - i}", font_size=14, color=WHITE
+            ).next_to(self.inputs[i], RIGHT * step)
             self.add(label)
         self.outputs.append(
             Pin(pin_side=PinSide.RIGHT, label=f"{i}").shift(
@@ -126,3 +127,69 @@ class Mux(VGroup):
         self.inputs.append(Pin(pin_side=PinSide.BOTTOM, label="sel").shift(start))
 
         self.add(*self.inputs, *self.outputs)
+
+
+class DFFVariant(enum.Enum):
+    """Variant of DFF."""
+
+    DFF = "DFF"
+    DFF_R = "DFF_R"
+    DFF_SR = "DFF_SR"
+
+
+class DFF(VGroup):
+    """Creates a DFF block."""
+
+    def __init__(self, variant: DFFVariant = DFFVariant.DFF, **kwargs):
+        super().__init__(**kwargs)
+        self.variant = variant
+        clk_side = 0.3
+        height_multiplier = 1.3  # DFF
+        clk_triangle_bottom_height = 0.2  # DFF
+        dq_height = UP * height_multiplier + DOWN * 0.3  # DFF
+        match self.variant:
+            case DFFVariant.DFF:
+                pass
+            case DFFVariant.DFF_R:
+                height_multiplier = 1.5
+                clk_triangle_bottom_height = 0.4
+            case DFFVariant.DFF_SR:
+                height_multiplier = 1.7
+                clk_triangle_bottom_height = 0.4
+                dq_height = UP * height_multiplier + DOWN * 0.5
+        right_triangle_height = np.sqrt(clk_side**2 - (clk_side / 2) ** 2)
+        self.shape = Polygon(
+            ORIGIN,
+            RIGHT,
+            RIGHT + height_multiplier * UP,
+            height_multiplier * UP,
+            UP * clk_triangle_bottom_height,
+            UP * clk_triangle_bottom_height
+            + UP * clk_side / 2
+            + RIGHT * right_triangle_height,
+            UP * (clk_triangle_bottom_height + clk_side),
+            **kwargs,
+        )
+        self.add(self.shape)
+        self.d_pin = Pin(pin_side=PinSide.LEFT, label="D", show_label=True)
+        self.d_pin.shift(dq_height)
+        self.q_pin = Pin(pin_side=PinSide.RIGHT, label="Q", show_label=True)
+        self.q_pin.shift(dq_height + RIGHT)
+        self.clk_pin = Pin(pin_side=PinSide.LEFT, label="clk", show_label=True)
+        self.clk_pin.shift(UP * clk_triangle_bottom_height + UP * clk_side / 2)
+        self.clk_pin.label.shift(RIGHT * right_triangle_height)
+        self.add(self.d_pin, self.q_pin, self.clk_pin)
+        if self.variant == DFFVariant.DFF_R or self.variant == DFFVariant.DFF_SR:
+            self.r_pin = Pin(pin_side=PinSide.BOTTOM, label="R", show_label=True)
+            self.r_pin.shift(RIGHT * 0.5)
+            self.add(self.r_pin)
+        if self.variant == DFFVariant.DFF_SR:
+            self.s_pin = Pin(pin_side=PinSide.TOP, label="S", show_label=True)
+            self.s_pin.shift(UP * self.shape.get_height() + RIGHT * 0.5)
+            self.add(self.s_pin)
+
+    def get_d_connection(self) -> Pin:
+        return self.d_pin
+
+    def get_q_connection(self) -> Pin:
+        return self.q_pin

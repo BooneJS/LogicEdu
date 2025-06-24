@@ -42,8 +42,6 @@ class Pin(VGroup):
         self.not_bubble_radius = kwargs.pop("not_bubble_radius", 0.12 / 2)
         self.bit_width = kwargs.pop("bit_width", 1)
         self.font_size = kwargs.pop("font_size", 14)
-        if self.font_size is not 14:
-            print(f"Pin: {self.label} font_size: {self.font_size}")
         super().__init__(**kwargs)
 
         # bus starts -0.15 in from the end.
@@ -151,15 +149,12 @@ class ConnectorLine(VGroup):
         manhatten: bool = kwargs.pop("manhatten", False)
         x_axis_shift: float = kwargs.pop("x_axis_shift", 0)
         super().__init__(**kwargs)
-        print(f"ConnectorLine: {start_pin} to {end_pin}")
         if manhatten is False:
             self.line = Line(start_pin.line.get_end(), end_pin.line.get_end(), **kwargs)
         else:
             # midpoint = np.round(
             #     np.mean([start_pin.line.get_end(), end_pin.line.get_end()]), 1
             # )
-            print(f"start_pin.line.get_end(): {start_pin.line.get_end()}")
-            print(f"end_pin.line.get_end(): {end_pin.line.get_end()}")
             mid_x_axis = (
                 np.round(
                     (start_pin.line.get_end()[0] + end_pin.line.get_end()[0]) / 2, 1
@@ -167,13 +162,10 @@ class ConnectorLine(VGroup):
                 + x_axis_shift
             )
 
-            print(f"midpoint: {mid_x_axis}")
             # X-axis of midpoint, Y-axis of start_pin.
             mid_segment_start = ORIGIN + [mid_x_axis, start_pin.line.get_end()[1], 0]
             # X-axis of midpoint, Y-axis of end_pin.
             mid_segment_end = ORIGIN + [mid_x_axis, end_pin.line.get_end()[1], 0]
-            print(f"mid_segment_start: {mid_segment_start}")
-            print(f"mid_segment_end: {mid_segment_end}")
             self.line = VGroup(
                 Line(start_pin.line.get_end(), mid_segment_start, **kwargs),
                 Line(mid_segment_start, mid_segment_end, **kwargs),

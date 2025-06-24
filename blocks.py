@@ -60,16 +60,20 @@ class ALUZ(VGroup):
             .shift(DOWN * 0.65)
         )
         self.input0_pin = Pin(
-            pin_side=PinSide.LEFT, label="in0", show_label=True
+            pin_side=PinSide.LEFT, label="in0", show_label=True, font_size=30
         ).shift(self.alu_shape.get_input0_start())
         self.input1_pin = Pin(
-            pin_side=PinSide.LEFT, label="in1", show_label=True
+            pin_side=PinSide.LEFT, label="in1", show_label=True, font_size=30
         ).shift(self.alu_shape.get_input1_start())
         self.result_pin = Pin(
-            pin_side=PinSide.RIGHT, label="result", show_label=True
+            pin_side=PinSide.RIGHT, label="result", show_label=True, font_size=30
         ).shift(self.alu_shape.get_result_start())
         self.zero_pin = Pin(
-            pin_side=PinSide.RIGHT, label="zero", show_label=True, color=BLUE
+            pin_side=PinSide.RIGHT,
+            label="zero",
+            show_label=True,
+            color=BLUE,
+            font_size=26,
         ).shift(self.alu_shape.get_zero_start())
 
         self.add(
@@ -113,7 +117,9 @@ class Mux(VGroup):
         )
         self.add(self.shape)
         for i in range(self.num_inputs):
-            self.inputs.append(Pin(pin_side=PinSide.LEFT).shift(UP * step * (i + 1)))
+            self.inputs.append(
+                Pin(pin_side=PinSide.LEFT, font_size=14).shift(UP * step * (i + 1))
+            )
             label = Text(
                 f"{self.num_inputs - 1 - i}", font_size=14, color=WHITE
             ).next_to(self.inputs[i], RIGHT * step)
@@ -141,6 +147,7 @@ class DFF(VGroup):
     """Creates a DFF block."""
 
     def __init__(self, variant: DFFVariant = DFFVariant.DFF, **kwargs):
+        bit_width = kwargs.pop("bit_width", 1)
         super().__init__(**kwargs)
         self.variant = variant
         clk_side = 0.3
@@ -152,6 +159,7 @@ class DFF(VGroup):
                 pass
             case DFFVariant.DFF_R:
                 height_multiplier = 1.5
+                dq_height = UP * height_multiplier + DOWN * 0.3  # DFF
                 clk_triangle_bottom_height = 0.4
             case DFFVariant.DFF_SR:
                 height_multiplier = 1.7
@@ -171,9 +179,14 @@ class DFF(VGroup):
             **kwargs,
         )
         self.add(self.shape)
-        self.d_pin = Pin(pin_side=PinSide.LEFT, label="D", show_label=True)
+        self.d_pin = Pin(
+            pin_side=PinSide.LEFT, label="D", show_label=True, bit_width=bit_width
+        )
         self.d_pin.shift(dq_height)
-        self.q_pin = Pin(pin_side=PinSide.RIGHT, label="Q", show_label=True)
+        self.q_pin = Pin(
+            pin_side=PinSide.RIGHT, label="Q", show_label=True, bit_width=bit_width
+        )
+
         self.q_pin.shift(dq_height + RIGHT)
         self.clk_pin = Pin(pin_side=PinSide.LEFT, label="clk", show_label=True)
         self.clk_pin.shift(UP * clk_triangle_bottom_height + UP * clk_side / 2)

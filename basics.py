@@ -18,11 +18,11 @@ import numpy as np
 from typing import List, Optional
 
 
+GRID = 0.1
+
+
 def grid_round(x: float) -> float:
     return np.round(x, 1)
-
-
-GRID = 0.1
 
 
 class PinSide(enum.Enum):
@@ -39,21 +39,43 @@ class Pin(VGroup):
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
         self.pin_length = kwargs.pop("pin_length", 0.6)
         self.dot_radius = kwargs.pop("dot_radius", 0.05)
-        self.not_bubble_radius = kwargs.pop("not_bubble_radius", 0.15 / 2)
-        self.bus_width = kwargs.pop("bus_width", 1)
+        self.not_bubble_radius = kwargs.pop("not_bubble_radius", 0.12 / 2)
+        self.bit_width = kwargs.pop("bit_width", 1)
+        self.font_size = kwargs.pop("font_size", 14)
+        if self.font_size is not 14:
+            print(f"Pin: {self.label} font_size: {self.font_size}")
         super().__init__(**kwargs)
+
+        # bus starts -0.15 in from the end.
+        bus_start = ORIGIN
+        bus_end = ORIGIN
         color = kwargs.get("color", WHITE)
 
+        slash_offset = 0.1
+        text_next_to = RIGHT * slash_offset
         match self.pin_side:
             case PinSide.LEFT:
                 end = LEFT * self.pin_length
+                bus_start = end + RIGHT * slash_offset + UP * slash_offset
+                bus_end = bus_start + 2 * DOWN * slash_offset + 2 * RIGHT * slash_offset
+                text_next_to = UP * slash_offset
             case PinSide.RIGHT:
                 end = RIGHT * self.pin_length
+                bus_end = end + LEFT * slash_offset + DOWN * slash_offset
+                bus_start = bus_end + 2 * LEFT * slash_offset + 2 * UP * slash_offset
+                text_next_to = UP * slash_offset
             case PinSide.TOP:
                 end = UP * self.pin_length
+                bus_start = end + DOWN * slash_offset + LEFT * slash_offset
+                bus_end = bus_start + 2 * DOWN * slash_offset + 2 * RIGHT * slash_offset
+                text_next_to = LEFT * slash_offset
             case PinSide.BOTTOM:
                 end = DOWN * self.pin_length
+                bus_end = end + UP * slash_offset + RIGHT * slash_offset
+                bus_start = bus_end + UP * slash_offset + 2 * LEFT * slash_offset
+                text_next_to = LEFT * slash_offset
 
+        # Pin line
         self.line = Line(
             start=ORIGIN,
             end=end,
@@ -65,10 +87,24 @@ class Pin(VGroup):
             radius=self.dot_radius,
         )
         self.add(self.line, self.dot)
-        if self.show_label:
-            self.label = Text(self.label, font_size=28, color=color).next_to(
-                self.line, RIGHT * 0.5
+
+        # Bus line
+        if self.bit_width > 1:
+            self.bus_line = Line(
+                start=bus_start,
+                end=bus_end,
+                color=color,
             )
+            self.bus_text = Text(f"{self.bit_width}", font_size=self.font_size).next_to(
+                self.bus_line, text_next_to
+            )
+            self.add(self.bus_line, self.bus_text)
+
+        if self.show_label:
+            self.label = Text(self.label, font_size=self.font_size, color=color)
+            # .next_to(
+            #     self.line, RIGHT * 0.5
+            # )
             match self.pin_side:
                 case PinSide.LEFT:
                     self.label.next_to(self.line, RIGHT * 0.5)

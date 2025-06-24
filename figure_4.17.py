@@ -27,7 +27,7 @@ class DrawAnALU(Scene):
         dff.move_to(LEFT * 5 + UP * 3)
         self.play(FadeIn(dff))
 
-        dffr = DFF(variant=DFFVariant.DFF_R).scale(0.75)
+        dffr = DFF(variant=DFFVariant.DFF_R, bit_width=4).scale(0.75)
         dffr.move_to(LEFT * 5 + UP * 1)
         self.play(FadeIn(dffr))
 

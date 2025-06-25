@@ -18,7 +18,7 @@ from blocks import *
 from logic_gates import *
 
 
-class DrawAnALU(Scene):
+class Demo(Scene):
     def construct(self):
         alu = ALUZ()
         alu.scale(0.5).move_to(LEFT * 3 + DOWN)
@@ -35,13 +35,13 @@ class DrawAnALU(Scene):
         dffsr.move_to(LEFT * 5 + DOWN * 1)
         self.play(FadeIn(dffsr))
 
-        # mux = Mux()
-        # mux.move_to(LEFT * 5 + DOWN * 1.5)
-        # self.play(Create(mux))
+        mux = Mux()
+        mux.move_to(LEFT * 2 + UP * 1)
+        self.play(Create(mux))
 
-        # mux = Mux(num_inputs=5)
-        # mux.move_to(LEFT * 5 + UP * 1.50).scale(0.75)
-        # self.play(Create(mux))
+        mux = Mux(num_inputs=5)
+        mux.move_to(LEFT * 3.5 + UP * 1).scale(0.75)
+        self.play(Create(mux))
 
         # Add the shape to the scene and play a creation animation
         self.play(Create(alu))

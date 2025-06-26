@@ -1,9 +1,8 @@
 import enum
 from manim import (
-    Dot,
     Ellipse,
-    Line,
     Polygon,
+    Rectangle,
     VGroup,
     Text,
     WHITE,
@@ -17,7 +16,6 @@ from manim import (
 import numpy as np
 from typing import List
 from basics import Pin, PinSide
-from logic_gates import ShapeFactory
 import math
 
 
@@ -496,3 +494,122 @@ class AluControl(GenEllipse):
             },
         ]
         super().__init__(label=label, pins_info=pins_info, **kwargs)
+
+
+class ShiftLeft(GenEllipse):
+    """Creates a ShiftLeft block."""
+
+    def __init__(self, amount: int, **kwargs):
+        label = f"Shift\nLeft {amount}"
+        eight = kwargs.pop("ellipse_height", 2)
+        ellipse_width = kwargs.pop("ellipse_width", 1.2)
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "in",
+                "bit_width": 32,
+                "show_label": False,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "out",
+                "bit_width": 32,
+                "show_label": False,
+            },
+        ]
+        super().__init__(label=label, pins_info=pins_info, **kwargs)
+
+
+class GenRectangle(VGroup):
+    """A generic block with a Rectangle and labeled pins."""
+
+    def __init__(
+        self,
+        label: str,
+        pins_info: list,
+        **kwargs,
+    ):
+        self.rectangle_width = kwargs.pop("rectangle_width", 1)
+        self.rectangle_height = kwargs.pop("rectangle_height", 2)
+
+        super().__init__(**kwargs)
+
+        # Draw the rectangle
+        self.body = Rectangle(
+            width=self.rectangle_width,
+            height=self.rectangle_height,
+            color=kwargs.get("color", WHITE),
+        )
+        self.add(self.body)
+
+        # Add label at the center
+        self.label = Text(label, font_size=18, color=kwargs.get("color", WHITE))
+        self.label.move_to(self.body.get_center())
+        self.add(self.label)
+
+        # Add pins
+        self.pins = []
+        for pin_info in pins_info:
+            # Copy to avoid mutating the original dict
+            pin_kwargs = dict(pin_info)
+            pin_side = pin_kwargs.pop("pin_side")
+            pin = Pin(pin_side=pin_side, **pin_kwargs, **kwargs)
+            # Position the pin on the rectangle
+            if pin_side == PinSide.LEFT:
+                pin.move_to(self.body.get_left() + LEFT * (pin.pin_length / 2))
+            elif pin_side == PinSide.RIGHT:
+                pin.move_to(self.body.get_right() + RIGHT * (pin.pin_length / 2))
+            elif pin_side == PinSide.TOP:
+                pin.move_to(self.body.get_top() + UP * (pin.pin_length / 2))
+            elif pin_side == PinSide.BOTTOM:
+                pin.move_to(self.body.get_bottom() + DOWN * (pin.pin_length / 2))
+            self.add(pin)
+            self.pins.append(pin)
+
+    def get_input_by_label(self, label):
+        for pin in self.pins:
+            if getattr(pin, "label_str", None) == label and pin.pin_side in [
+                PinSide.LEFT,
+                PinSide.BOTTOM,
+                PinSide.TOP,
+            ]:
+                return pin
+        return None
+
+    def get_output_by_label(self, label):
+        for pin in self.pins:
+            if (
+                getattr(pin, "label_str", None) == label
+                and pin.pin_side == PinSide.RIGHT
+            ):
+                return pin
+        return None
+
+
+class PC(GenRectangle):
+    """Creates a PC block."""
+
+    def __init__(self, **kwargs):
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "pin_length": 0.5,
+                "label": "NextPC",
+                "bit_width": 32,
+                "show_label": False,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "pin_length": 0.5,
+                "label": "PC",
+                "bit_width": 32,
+                "show_label": False,
+            },
+        ]
+        super().__init__(
+            label="PC",
+            pins_info=pins_info,
+            rectangle_height=1.2,
+            rectangle_width=0.4,
+            **kwargs,
+        )

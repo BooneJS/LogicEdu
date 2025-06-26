@@ -1,16 +1,17 @@
 from manim import (
-    VGroup,
-    Line,
-    Dot,
-    Circle,
-    WHITE,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    ORIGIN,
-    Text,
     BLUE,
+    Circle,
+    Dot,
+    DOWN,
+    LEFT,
+    Line,
+    ORIGIN,
+    PI,
+    RIGHT,
+    Text,
+    UP,
+    VGroup,
+    WHITE,
 )
 import enum
 from manim.typing import Point3DLike
@@ -35,7 +36,7 @@ class PinSide(enum.Enum):
 class Pin(VGroup):
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
-        self.label = kwargs.pop("label", "")
+        self.label_str = kwargs.pop("label", "")
         self.show_label = kwargs.pop("show_label", False)
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
         self.pin_length = kwargs.pop("pin_length", 0.6)
@@ -100,7 +101,7 @@ class Pin(VGroup):
             self.add(self.bus_line, self.bus_text)
 
         if self.show_label:
-            self.label = Text(self.label, font_size=self.font_size, color=color)
+            self.label = Text(self.label_str, font_size=self.font_size, color=color)
             if self.inner_label:
                 match self.pin_side:
                     case PinSide.LEFT:
@@ -111,16 +112,25 @@ class Pin(VGroup):
                         self.label.next_to(self.line, DOWN * 0.5)
                     case PinSide.BOTTOM:
                         self.label.next_to(self.line, UP * 0.5)
-            else:  # above the pin
+            else:
                 match self.pin_side:
                     case PinSide.LEFT:
-                        self.label.next_to(self.line, UP * 0.25, aligned_edge=RIGHT)
+                        self.label.next_to(
+                            self.line, UP, aligned_edge=RIGHT, buff=0.1
+                        ).shift(LEFT * 0.1)
                     case PinSide.RIGHT:
-                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+                        self.label.next_to(
+                            self.line, UP, aligned_edge=LEFT, buff=0.1
+                        ).shift(RIGHT * 0.1)
                     case PinSide.TOP:
-                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+                        self.label.next_to(
+                            self.line, LEFT, aligned_edge=DOWN, buff=0.1
+                        ).shift(UP * 0.1)
                     case PinSide.BOTTOM:
-                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+                        self.label.rotate(PI / 2.0)
+                        self.label.next_to(
+                            self.line, LEFT, aligned_edge=UP, buff=0.1
+                        ).shift(DOWN * 0.1)
 
             self.add(self.label)
 
@@ -144,6 +154,9 @@ class Pin(VGroup):
         self.add(self.circle)
         self.line.put_start_and_end_on(new_start, self.line.get_end())
 
+    def __str__(self):
+        return f"Pin(label={self.label_str}, side={self.pin_side}, length={self.pin_length})"
+
 
 class ConnectorLine(VGroup):
     """ConnectorLine is used to connect two pins directly. If a mid_y_axis is provided,
@@ -162,15 +175,19 @@ class ConnectorLine(VGroup):
         if manhatten is False:
             self.line = Line(start_pin.line.get_end(), end_pin.line.get_end(), **kwargs)
         else:
-            # midpoint = np.round(
-            #     np.mean([start_pin.line.get_end(), end_pin.line.get_end()]), 1
-            # )
-            mid_x_axis = (
-                np.round(
-                    (start_pin.line.get_end()[0] + end_pin.line.get_end()[0]) / 2, 1
+            # If one of the pins is TOP or BOTTOM, that pin's x-axis is the midpoint to get a vertical line.
+            mid_x_axis = 0
+            if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+                mid_x_axis = start_pin.line.get_end()[0]
+            elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+                mid_x_axis = end_pin.line.get_end()[0]
+            else:
+                mid_x_axis = (
+                    np.round(
+                        (start_pin.line.get_end()[0] + end_pin.line.get_end()[0]) / 2, 1
+                    )
+                    + x_axis_shift
                 )
-                + x_axis_shift
-            )
 
             # X-axis of midpoint, Y-axis of start_pin.
             mid_segment_start = ORIGIN + [mid_x_axis, start_pin.line.get_end()[1], 0]

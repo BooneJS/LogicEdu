@@ -86,7 +86,32 @@ class Demo(Scene):
         control = Control(color=BLUE).move_to(RIGHT * 2.5 + DOWN * 2.5)
         self.play(Create(control))
 
+        alu_control = AluControl(color=BLUE).move_to(RIGHT * 4.5 + DOWN * 0)
+        self.play(Create(alu_control))
+
         wires = VGroup()
+
+        try:
+            aluop_output = control.get_output_by_label("ALUOp")
+            aluop_input = alu_control.get_input_by_label("ALUOp")
+
+            if aluop_output is None:
+                print("Warning: Could not find 'ALUOp' output pin in control block")
+                return
+            if aluop_input is None:
+                print("Warning: Could not find 'ALUOp' input pin in alu_control block")
+                return
+
+            wires.add(
+                ConnectorLine(
+                    aluop_output,
+                    aluop_input,
+                    manhatten=True,
+                )
+            )
+        except Exception as e:
+            print(f"Error creating ALUOp connector line: {e}")
+
         wires.add(
             ConnectorLine(
                 alu.get_result_connection(),

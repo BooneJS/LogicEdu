@@ -246,6 +246,8 @@ class GenEllipse(VGroup):
             ],
         )
         super().__init__(**kwargs)
+        self.inputs: List[Pin] = []
+        self.outputs: List[Pin] = []
 
         self.shape = Ellipse(
             height=ellipse_height,
@@ -277,6 +279,7 @@ class GenEllipse(VGroup):
                 pin = Pin(**pin_info, **kwargs)
                 match pin.pin_side:
                     case PinSide.LEFT:
+                        self.inputs.append(pin)
                         y_shift = ellipse_height / 2 - pin_y_down_distance
                         x_shift = ellipse_width / 2 - pin_x_over_distance
                         pin.shift(LEFT * x_half + UP * y_shift)
@@ -289,6 +292,7 @@ class GenEllipse(VGroup):
                             pin.line.get_end(),
                         )
                     case PinSide.RIGHT:
+                        self.outputs.append(pin)
                         y_shift = ellipse_height / 2 - pin_y_down_distance
                         pin.shift(RIGHT * x_half + UP * y_shift)
                         pin.line.put_start_and_end_on(
@@ -300,12 +304,14 @@ class GenEllipse(VGroup):
                             pin.line.get_end(),
                         )
                     case PinSide.TOP:
+                        self.inputs.append(pin)
                         pin.shift(
                             UP * y_half
                             + LEFT * ellipse_width / 2
                             + RIGHT * pin_x_over_distance
                         )
                     case PinSide.BOTTOM:
+                        self.inputs.append(pin)
                         pin.shift(
                             DOWN * y_half
                             + LEFT * ellipse_width / 2
@@ -314,6 +320,24 @@ class GenEllipse(VGroup):
                 self.add(pin)
                 pin_y_down_distance += pin_gap
                 pin_x_over_distance += pin_gap
+
+    def get_input_by_index(self, index: int) -> Pin:
+        return self.inputs[index]
+
+    def get_input_by_label(self, label: str) -> Pin:
+        for pin in self.inputs:
+            if pin.label.text == label:
+                return pin
+        raise ValueError(f"No input pin found with label '{label}'")
+
+    def get_output_by_index(self, index: int) -> Pin:
+        return self.outputs[index]
+
+    def get_output_by_label(self, label: str) -> Pin:
+        for pin in self.outputs:
+            if pin.label.text == label:
+                return pin
+        raise ValueError(f"No output pin found with label '{label}'")
 
     @staticmethod
     def ellipse_x_intercepts(height, width, y) -> float:
@@ -404,7 +428,7 @@ class Control(GenEllipse):
             {
                 "pin_side": PinSide.RIGHT,
                 "label": "ALUOp",
-                "bit_width": 2,
+                "bit_width": 1,
                 "pin_length": output_pin_length,
                 **pin_kwargs,
             },
@@ -437,3 +461,38 @@ class Control(GenEllipse):
             width=ellipse_width,
             **kwargs,
         )
+
+
+class AluControl(GenEllipse):
+    """Creates a ALU Control block."""
+
+    def __init__(self, **kwargs):
+        label = "  ALU\nControl"
+        ellipse_height = kwargs.pop("ellipse_height", 2)
+        ellipse_width = kwargs.pop("ellipse_width", 1.2)
+        pin_kwargs = {
+            "show_label": True,
+            "inner_label": False,
+            "pin_length": 1.0,
+        }
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "inst[5:0]",
+                "bit_width": 6,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "decode",
+                "bit_width": 1,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.BOTTOM,
+                "label": "ALUOp",
+                "bit_width": 1,
+                **pin_kwargs,
+            },
+        ]
+        super().__init__(label=label, pins_info=pins_info, **kwargs)

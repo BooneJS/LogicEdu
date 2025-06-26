@@ -567,10 +567,10 @@ class GenRectangle(VGroup):
                 pin.shift(RIGHT * (self.rectangle_width / 2))
                 self.outputs.append(pin)
             elif pin_side == PinSide.TOP:
-                pin.move_to(self.shape.get_top())
+                pin.shift(UP * (self.rectangle_height / 2))
                 self.inputs.append(pin)
             elif pin_side == PinSide.BOTTOM:
-                pin.move_to(self.shape.get_bottom())
+                pin.shift(DOWN * (self.rectangle_height / 2))
                 self.inputs.append(pin)
             self.add(pin)
 
@@ -650,3 +650,48 @@ class InstructionMemory(GenRectangle):
         )
         self.inputs[0].shift(UP * ((self.rectangle_height / 2) - 0.3))
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.3))
+
+
+class DataMemory(GenRectangle):
+    """Creates an Data Memory block."""
+
+    def __init__(self, **kwargs):
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "Addr",
+                "bit_width": 32,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "WriteData",
+                "bit_width": 32,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.TOP,
+                "label": "MemWrite",
+                "bit_width": 1,
+                "show_label": True,
+                "inner_label": False,
+                "pin_length": 1.1,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ReadData",
+                "bit_width": 32,
+                "show_label": True,
+            },
+        ]
+        super().__init__(
+            label="DMEM",
+            pins_info=pins_info,
+            rectangle_height=1.5,
+            rectangle_width=1.2,
+            **kwargs,
+        )
+        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - 0.2))
+        self.inputs[1].shift(DOWN * ((self.rectangle_height / 2) - 0.3))
+        self.outputs[0].shift(UP * 0.3)
+        self.label.shift(DOWN * (self.rectangle_height / 2 - 0.6))

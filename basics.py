@@ -123,6 +123,7 @@ class Pin(VGroup):
                             self.line, UP, aligned_edge=LEFT, buff=0.1
                         ).shift(RIGHT * 0.1)
                     case PinSide.TOP:
+                        self.label.rotate(PI / 2.0)
                         self.label.next_to(
                             self.line, LEFT, aligned_edge=DOWN, buff=0.1
                         ).shift(UP * 0.1)

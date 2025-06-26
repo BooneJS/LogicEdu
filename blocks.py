@@ -167,10 +167,11 @@ class DFF(VGroup):
                 clk_triangle_bottom_height = 0.4
                 dq_height = UP * height_multiplier + DOWN * 0.5
         right_triangle_height = np.sqrt(clk_side**2 - (clk_side / 2) ** 2)
+        width_multiplier = 0.8
         self.shape = Polygon(
             ORIGIN,
-            RIGHT,
-            RIGHT + height_multiplier * UP,
+            RIGHT * width_multiplier,
+            RIGHT * width_multiplier + height_multiplier * UP,
             height_multiplier * UP,
             UP * clk_triangle_bottom_height,
             UP * clk_triangle_bottom_height
@@ -188,8 +189,10 @@ class DFF(VGroup):
             pin_side=PinSide.RIGHT, label="Q", show_label=True, bit_width=bit_width
         )
 
-        self.q_pin.shift(dq_height + RIGHT)
-        self.clk_pin = Pin(pin_side=PinSide.LEFT, label="clk", show_label=True)
+        self.q_pin.shift(dq_height + RIGHT * width_multiplier)
+        self.clk_pin = Pin(
+            pin_side=PinSide.LEFT, label="clk", show_label=True, font_size=18
+        )
         self.clk_pin.shift(UP * clk_triangle_bottom_height + UP * clk_side / 2)
         self.clk_pin.label.shift(RIGHT * right_triangle_height)
         self.add(self.d_pin, self.q_pin, self.clk_pin)
@@ -535,19 +538,21 @@ class GenRectangle(VGroup):
         super().__init__(**kwargs)
 
         # Draw the rectangle
-        self.body = Rectangle(
+        self.shape = Rectangle(
             width=self.rectangle_width,
             height=self.rectangle_height,
             color=kwargs.get("color", WHITE),
         )
-        self.add(self.body)
+        self.add(self.shape)
 
         # Add label at the center
         self.label = Text(label, font_size=18, color=kwargs.get("color", WHITE))
-        self.label.move_to(self.body.get_center())
+        self.label.move_to(self.shape.get_center())
         self.add(self.label)
 
         # Add pins
+        self.inputs: List[Pin] = []
+        self.outputs: List[Pin] = []
         self.pins = []
         for pin_info in pins_info:
             # Copy to avoid mutating the original dict
@@ -556,15 +561,18 @@ class GenRectangle(VGroup):
             pin = Pin(pin_side=pin_side, **pin_kwargs, **kwargs)
             # Position the pin on the rectangle
             if pin_side == PinSide.LEFT:
-                pin.move_to(self.body.get_left() + LEFT * (pin.pin_length / 2))
+                pin.shift(LEFT * (self.rectangle_width / 2))
+                self.inputs.append(pin)
             elif pin_side == PinSide.RIGHT:
-                pin.move_to(self.body.get_right() + RIGHT * (pin.pin_length / 2))
+                pin.shift(RIGHT * (self.rectangle_width / 2))
+                self.outputs.append(pin)
             elif pin_side == PinSide.TOP:
-                pin.move_to(self.body.get_top() + UP * (pin.pin_length / 2))
+                pin.move_to(self.shape.get_top())
+                self.inputs.append(pin)
             elif pin_side == PinSide.BOTTOM:
-                pin.move_to(self.body.get_bottom() + DOWN * (pin.pin_length / 2))
+                pin.move_to(self.shape.get_bottom())
+                self.inputs.append(pin)
             self.add(pin)
-            self.pins.append(pin)
 
     def get_input_by_label(self, label):
         for pin in self.pins:
@@ -613,3 +621,32 @@ class PC(GenRectangle):
             rectangle_width=0.4,
             **kwargs,
         )
+
+
+class InstructionMemory(GenRectangle):
+    """Creates an Instruction Memory block."""
+
+    def __init__(self, **kwargs):
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "RAddr",
+                "bit_width": 32,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "Inst",
+                "bit_width": 32,
+                "show_label": True,
+            },
+        ]
+        super().__init__(
+            label="IMEM",
+            pins_info=pins_info,
+            rectangle_height=1.5,
+            rectangle_width=1.2,
+            **kwargs,
+        )
+        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - 0.3))
+        self.label.shift(DOWN * (self.rectangle_height / 2 - 0.3))

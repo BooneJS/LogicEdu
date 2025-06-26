@@ -71,8 +71,8 @@ class Demo(Scene):
 
         gates_vg = VGroup()
 
-        base_loc = UP * 4.2
-        scale = 0.75
+        base_loc = LEFT + UP * 5.2
+        scale = 0.5
         for i, gate in enumerate(all_gates):
             gate.scale(scale)
             gate.move_to(base_loc + DOWN * (i * (scale + 0.1)))
@@ -80,14 +80,25 @@ class Demo(Scene):
 
         self.play(FadeIn(gates_vg.move_to(base_loc + DOWN * (i * 0.6))))
 
-        sign_extend = SignExtend(color=WHITE).move_to(RIGHT * 2.5 + UP * 2.5)
+        sign_extend = SignExtend(color=WHITE).scale(0.5).move_to(RIGHT + UP * 3)
         self.play(FadeIn(sign_extend))
 
-        control = Control(color=BLUE).move_to(RIGHT * 2.5 + DOWN * 2.5)
+        shift_left2 = (
+            ShiftLeft(amount=2, color=WHITE).scale(0.75).move_to(RIGHT * 2.0 + UP * 2.5)
+        )
+        self.play(FadeIn(shift_left2))
+
+        control = Control(color=BLUE).scale(0.75).move_to(DOWN * 2.5)
         self.play(Create(control))
 
-        alu_control = AluControl(color=BLUE).move_to(RIGHT * 4.5 + DOWN * 0)
+        alu_control = AluControl(color=BLUE).scale(0.5).move_to(RIGHT * 1.5 + DOWN * 0)
         self.play(Create(alu_control))
+
+        pc_block = PC(color=WHITE).move_to(RIGHT * 2.5 + DOWN * 2.5)
+        self.play(Create(pc_block))
+
+        imem = InstructionMemory(color=WHITE).move_to(RIGHT * 2.5 + DOWN)
+        self.play(Create(imem))
 
         wires = VGroup()
 

@@ -1,10 +1,11 @@
 import enum
 from manim import (
+    Dot,
+    Ellipse,
+    Line,
     Polygon,
     VGroup,
     Text,
-    Line,
-    Dot,
     WHITE,
     BLUE,
     LEFT,
@@ -16,6 +17,8 @@ from manim import (
 import numpy as np
 from typing import List
 from basics import Pin, PinSide
+from logic_gates import ShapeFactory
+import math
 
 
 class ClassicALUZShape(Polygon):
@@ -215,3 +218,222 @@ class DFF(VGroup):
 
     def get_s_connection(self) -> Pin:
         return self.s_pin
+
+
+class GenEllipse(VGroup):
+    """Creates a generic ellipse block used for SignExtend, Control, etc."""
+
+    def __init__(self, **kwargs):
+        self.inner_label = kwargs.pop("inner_label", True)
+        self.label = kwargs.pop("label", "GenEllipse")
+        ellipse_height = kwargs.pop("height", 2)
+        ellipse_width = kwargs.pop("width", 1)
+        pins_info = kwargs.pop(
+            "pins_info",
+            [
+                {
+                    "pin_side": PinSide.LEFT,
+                    "label": "in",
+                    "bit_width": 1,
+                    "show_label": False,
+                },
+                {
+                    "pin_side": PinSide.LEFT,
+                    "label": "out",
+                    "bit_width": 1,
+                    "show_label": False,
+                },
+            ],
+        )
+        super().__init__(**kwargs)
+
+        self.shape = Ellipse(
+            height=ellipse_height,
+            width=ellipse_width,
+            **kwargs,
+        )
+        self.add(self.shape)
+
+        x_half = ellipse_width / 2
+        y_half = ellipse_height / 2
+        self.label_text = Text(f"{self.label}", font_size=24, **kwargs)
+        self.add(self.label_text)
+
+        pin_dirs = [pin for pin in PinSide]
+        pin_gap = 0.3
+
+        # Iterate through each direction to calculate placement
+        for pin_dir in pin_dirs:
+
+            filtered_pins = [
+                pin_info for pin_info in pins_info if pin_info["pin_side"] == pin_dir
+            ]
+            pin_count = len(filtered_pins)
+            # Calculate both y and x. Only one will be used in the loop below.
+            pin_y_down_distance = ellipse_height / 2 - pin_gap * (pin_count - 1) / 2
+            pin_x_over_distance = ellipse_width / 2 - pin_gap * (pin_count - 1) / 2
+
+            for pin_info in filtered_pins:
+                pin = Pin(**pin_info, **kwargs)
+                match pin.pin_side:
+                    case PinSide.LEFT:
+                        y_shift = ellipse_height / 2 - pin_y_down_distance
+                        x_shift = ellipse_width / 2 - pin_x_over_distance
+                        pin.shift(LEFT * x_half + UP * y_shift)
+                        pin.line.put_start_and_end_on(
+                            pin.line.get_start()
+                            + RIGHT
+                            * GenEllipse.ellipse_x_intercepts(
+                                ellipse_height, ellipse_width, y_shift
+                            ),
+                            pin.line.get_end(),
+                        )
+                    case PinSide.RIGHT:
+                        y_shift = ellipse_height / 2 - pin_y_down_distance
+                        pin.shift(RIGHT * x_half + UP * y_shift)
+                        pin.line.put_start_and_end_on(
+                            pin.line.get_start()
+                            + LEFT
+                            * GenEllipse.ellipse_x_intercepts(
+                                ellipse_height, ellipse_width, y_shift
+                            ),
+                            pin.line.get_end(),
+                        )
+                    case PinSide.TOP:
+                        pin.shift(
+                            UP * y_half
+                            + LEFT * ellipse_width / 2
+                            + RIGHT * pin_x_over_distance
+                        )
+                    case PinSide.BOTTOM:
+                        pin.shift(
+                            DOWN * y_half
+                            + LEFT * ellipse_width / 2
+                            + RIGHT * pin_x_over_distance
+                        )
+                self.add(pin)
+                pin_y_down_distance += pin_gap
+                pin_x_over_distance += pin_gap
+
+    @staticmethod
+    def ellipse_x_intercepts(height, width, y) -> float:
+        """Calculates pin.end given y for an ellipse."""
+        a = width / 2
+        b = height / 2
+        inside = 1 - (y**2) / (b**2)
+        if inside < 0:
+            # No real x-intercepts at this y
+            return 0
+        x = a - a * math.sqrt(inside)
+        return x
+
+
+class SignExtend(GenEllipse):
+    """Creates a SignExtend block."""
+
+    def __init__(self, **kwargs):
+        label = " Sign-\nExtend"
+        ellipse_height = kwargs.pop("ellipse_height", 2)
+        ellipse_width = kwargs.pop("ellipse_width", 1.2)
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "in",
+                "bit_width": 16,
+                "show_label": False,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "out",
+                "bit_width": 32,
+                "show_label": False,
+            },
+        ]
+        super().__init__(label=label, pins_info=pins_info, **kwargs)
+
+
+class Control(GenEllipse):
+    """Creates a Control block."""
+
+    def __init__(self, **kwargs):
+        label = "Control"
+        ellipse_height = kwargs.pop("ellipse_height", 3)
+        ellipse_width = kwargs.pop("ellipse_width", 1)
+        input_pin_length = 1.2
+        output_pin_length = 1.0
+        pin_kwargs = {
+            "show_label": True,
+            "inner_label": False,
+        }
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "inst[31:26]",
+                "bit_width": 6,
+                "pin_length": input_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "RegDst",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "Branch",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "MemRead",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "MemtoReg",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ALUOp",
+                "bit_width": 2,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "MemWrite",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ALUSrc",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "RegWrite",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                **pin_kwargs,
+            },
+        ]
+        super().__init__(
+            label=label,
+            pins_info=pins_info,
+            height=ellipse_height,
+            width=ellipse_width,
+            **kwargs,
+        )

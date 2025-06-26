@@ -34,6 +34,7 @@ class PinSide(enum.Enum):
 
 class Pin(VGroup):
     def __init__(self, **kwargs):
+        self.inner_label = kwargs.pop("inner_label", True)
         self.label = kwargs.pop("label", "")
         self.show_label = kwargs.pop("show_label", False)
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
@@ -93,25 +94,34 @@ class Pin(VGroup):
                 end=bus_end,
                 color=color,
             )
-            self.bus_text = Text(f"{self.bit_width}", font_size=self.font_size).next_to(
-                self.bus_line, text_next_to
-            )
+            self.bus_text = Text(
+                f"{self.bit_width}", font_size=self.font_size, **kwargs
+            ).next_to(self.bus_line, text_next_to)
             self.add(self.bus_line, self.bus_text)
 
         if self.show_label:
             self.label = Text(self.label, font_size=self.font_size, color=color)
-            # .next_to(
-            #     self.line, RIGHT * 0.5
-            # )
-            match self.pin_side:
-                case PinSide.LEFT:
-                    self.label.next_to(self.line, RIGHT * 0.5)
-                case PinSide.RIGHT:
-                    self.label.next_to(self.line, LEFT * 0.5)
-                case PinSide.TOP:
-                    self.label.next_to(self.line, DOWN * 0.5)
-                case PinSide.BOTTOM:
-                    self.label.next_to(self.line, UP * 0.5)
+            if self.inner_label:
+                match self.pin_side:
+                    case PinSide.LEFT:
+                        self.label.next_to(self.line, RIGHT * 0.5)
+                    case PinSide.RIGHT:
+                        self.label.next_to(self.line, LEFT * 0.5)
+                    case PinSide.TOP:
+                        self.label.next_to(self.line, DOWN * 0.5)
+                    case PinSide.BOTTOM:
+                        self.label.next_to(self.line, UP * 0.5)
+            else:  # above the pin
+                match self.pin_side:
+                    case PinSide.LEFT:
+                        self.label.next_to(self.line, UP * 0.25, aligned_edge=RIGHT)
+                    case PinSide.RIGHT:
+                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+                    case PinSide.TOP:
+                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+                    case PinSide.BOTTOM:
+                        self.label.next_to(self.line, UP * 0.25, aligned_edge=LEFT)
+
             self.add(self.label)
 
     def add_invert(self, color=WHITE):

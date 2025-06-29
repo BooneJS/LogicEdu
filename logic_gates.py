@@ -15,7 +15,7 @@ from manim import (
     DEGREES,
 )
 from manim.typing import Point3DLike
-from basics import Pin, PinSide
+from basics import Pin, PinSide, VGroupLogicBase
 from typing import List
 import enum
 import numpy as np
@@ -168,7 +168,7 @@ LOGIC_UP = UP * ShapeFactory.gate_dim()
 LOGIC_DOWN = DOWN * ShapeFactory.gate_dim()
 
 
-class UnaryLogic(VGroup):
+class UnaryLogic(VGroupLogicBase):
     """Creates shapes for unary logic gates per MIL-STD-806B."""
 
     def __init__(self, **kwargs):
@@ -209,7 +209,7 @@ class UnaryLogic(VGroup):
         return self.shape.get_height()
 
     def dim_all(self):
-        self.shape.set_stroke(opacity=0.1)
+        self.shape.set_stroke(opacity=self.dim_value)
         for pin in self.inputs + self.outputs:
             pin.set_opacity(0.1)
 
@@ -219,7 +219,7 @@ class UnaryLogic(VGroup):
             pin.set_opacity(1)
 
 
-class BinaryLogic(VGroup):
+class BinaryLogic(VGroupLogicBase):
     def __init__(self, logic_type: LogicType, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         super().__init__(**kwargs)

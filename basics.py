@@ -40,7 +40,19 @@ class PinType(enum.Enum):
     OUTPUT = 2
 
 
-class Pin(VGroup):
+class VGroupLogicBase(VGroup):
+    def __init__(self, **kwargs):
+        self.dim_value = kwargs.pop("dim_value", 0.3)
+        super().__init__(**kwargs)
+
+    def dim_all(self):
+        pass
+
+    def undim_all(self):
+        pass
+
+
+class Pin(VGroupLogicBase):
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
         self.label_str = kwargs.pop("label", "")
@@ -166,8 +178,22 @@ class Pin(VGroup):
     def __str__(self):
         return f"Pin(label={self.label_str}, side={self.pin_side}, length={self.pin_length})"
 
+    def dim_all(self):
+        super().dim_all()
+        self.line.set_opacity(self.dim_value)
+        self.dot.set_opacity(self.dim_value)
+        self.bus_line.set_opacity(self.dim_value)
+        self.bus_text.set_opacity(self.dim_value)
 
-class ConnectorLine(VGroup):
+    def undim_all(self):
+        super().undim_all()
+        self.line.set_opacity(1)
+        self.dot.set_opacity(1)
+        self.bus_line.set_opacity(1)
+        self.bus_text.set_opacity(1)
+
+
+class ConnectorLine(VGroupLogicBase):
     """ConnectorLine is used to connect two pins directly. If a mid_y_axis is provided,
     3 segments are created: the first and last traverse x-axis only, and the middle segment
     traverses y-axis only."""
@@ -208,6 +234,16 @@ class ConnectorLine(VGroup):
                 Line(mid_segment_end, end_pin.line.get_end(), **kwargs),
             )
         self.add(self.line)
+
+    def dim_all(self):
+        super().dim_all()
+        for line in self.line:
+            line.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        super().undim_all()
+        for line in self.line:
+            line.set_opacity(1)
 
 
 def create_grid() -> NumberPlane:

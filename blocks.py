@@ -15,7 +15,7 @@ from manim import (
 )
 import numpy as np
 from typing import List
-from basics import Pin, PinSide, PinType
+from basics import Pin, PinSide, PinType, VGroupLogicBase
 import math
 
 
@@ -49,13 +49,13 @@ class ClassicALUZShape(Polygon):
         return (self.get_vertices()[2] + self.get_vertices()[1]) / 2.0 + (UP * 0.75)
 
 
-class ALUZ(VGroup):
+class ALUZ(VGroupLogicBase):
     """Starting with classic ALU Shape, adds text and lines."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.alu_shape = ClassicALUZShape()
-        self.title = (
+        self.label = (
             Text("ALU", font_size=36, color=WHITE)
             .move_to(self.alu_shape.get_center())
             .shift(DOWN * 0.65)
@@ -96,7 +96,7 @@ class ALUZ(VGroup):
             self.input1_pin,
             self.result_pin,
             self.zero_pin,
-            self.title,
+            self.label,
         )
 
     def get_input0_connection(self) -> Pin:
@@ -111,8 +111,111 @@ class ALUZ(VGroup):
     def get_zero_connection(self) -> Pin:
         return self.zero_pin
 
+    def dim_all(self):
+        super().dim_all()
+        self.alu_shape.set_stroke(opacity=self.dim_value)
+        self.label.set_opacity(self.dim_value)
+        self.input0_pin.set_opacity(self.dim_value)
+        self.input1_pin.set_opacity(self.dim_value)
+        self.result_pin.set_opacity(self.dim_value)
+        self.zero_pin.set_opacity(self.dim_value)
 
-class Mux(VGroup):
+    def undim_all(self):
+        super().undim_all()
+        self.alu_shape.set_stroke(opacity=1)
+        self.label.set_opacity(1)
+        self.input0_pin.set_opacity(1)
+        self.input1_pin.set_opacity(1)
+        self.result_pin.set_opacity(1)
+        self.zero_pin.set_opacity(1)
+
+
+class Adder(VGroupLogicBase):
+    """Creates an Adder block."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pins: List[Pin] = []
+        self.shape = ClassicALUZShape()
+        self.label = (
+            Text("Adder", font_size=36, color=WHITE)
+            .move_to(self.shape.get_center())
+            .shift(DOWN * 0.65)
+        )
+        self.input0_pin = Pin(
+            pin_side=PinSide.LEFT,
+            label="in0",
+            show_label=False,
+            font_size=30,
+            pin_type=PinType.INPUT,
+        ).shift(self.shape.get_input0_start())
+        self.input1_pin = Pin(
+            pin_side=PinSide.LEFT,
+            label="in1",
+            show_label=False,
+            font_size=30,
+            pin_type=PinType.INPUT,
+        ).shift(self.shape.get_input1_start())
+        self.result_pin = Pin(
+            pin_side=PinSide.RIGHT,
+            label="result",
+            show_label=False,
+            font_size=30,
+            pin_type=PinType.OUTPUT,
+        ).shift(self.shape.get_result_start())
+        self.add(
+            self.shape, self.label, self.input0_pin, self.input1_pin, self.result_pin
+        )
+
+    def get_input0_connection(self) -> Pin:
+        return self.input0_pin
+
+    def get_input1_connection(self) -> Pin:
+        return self.input1_pin
+
+    def get_result_connection(self) -> Pin:
+        return self.result_pin
+
+    def dim_all(self):
+        super().dim_all()
+        self.shape.set_stroke(opacity=self.dim_value)
+        self.label.set_opacity(self.dim_value)
+        self.input0_pin.set_opacity(self.dim_value)
+        self.input1_pin.set_opacity(self.dim_value)
+        self.result_pin.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        super().undim_all()
+        self.shape.set_stroke(opacity=1)
+        self.label.set_opacity(1)
+        self.input0_pin.set_opacity(1)
+        self.input1_pin.set_opacity(1)
+        self.result_pin.set_opacity(1)
+
+
+class AdderPlus4(Adder):
+    """Creates PC+4 Adder"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.plus4_text = Text("'d4", font_size=36, color=WHITE).next_to(
+            self.get_input1_connection(), LEFT
+        )
+        self.add(self.plus4_text)
+        self.shift(
+            DOWN * (self.shape.get_height() / 2) + LEFT * (self.shape.get_width() / 2)
+        )
+
+    def dim_all(self):
+        super().dim_all()
+        self.plus4_text.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        super().undim_all()
+        self.plus4_text.set_opacity(1)
+
+
+class Mux(VGroupLogicBase):
     """Creates a Mux block."""
 
     def __init__(self, **kwargs):
@@ -162,7 +265,7 @@ class DFFVariant(enum.Enum):
     DFF_SR = "DFF_SR"
 
 
-class DFF(VGroup):
+class DFF(VGroupLogicBase):
     """Creates a DFF block."""
 
     def __init__(self, variant: DFFVariant = DFFVariant.DFF, **kwargs):
@@ -239,7 +342,7 @@ class DFF(VGroup):
         return self.s_pin
 
 
-class GenEllipse(VGroup):
+class GenEllipse(VGroupLogicBase):
     """Creates a generic ellipse block used for SignExtend, Control, etc."""
 
     def __init__(self, **kwargs):
@@ -252,12 +355,14 @@ class GenEllipse(VGroup):
             [
                 {
                     "pin_side": PinSide.LEFT,
+                    "pin_type": PinType.INPUT,
                     "label": "in",
                     "bit_width": 1,
                     "show_label": False,
                 },
                 {
-                    "pin_side": PinSide.LEFT,
+                    "pin_side": PinSide.RIGHT,
+                    "pin_type": PinType.OUTPUT,
                     "label": "out",
                     "bit_width": 1,
                     "show_label": False,
@@ -376,12 +481,14 @@ class GenEllipse(VGroup):
         return x
 
     def dim_all(self):
-        self.shape.set_stroke(opacity=0.1)
-        self.label.set_opacity(0.1)
+        super().dim_all()
+        self.shape.set_stroke(opacity=self.dim_value)
+        self.label.set_opacity(self.dim_value)
         for pin in self.pins:
-            pin.set_opacity(0.1)
+            pin.set_opacity(self.dim_value)
 
     def undim_all(self):
+        super().undim_all()
         self.shape.set_stroke(opacity=1)
         self.label.set_opacity(1)
         for pin in self.pins:
@@ -558,7 +665,7 @@ class ShiftLeft(GenEllipse):
         super().__init__(label=label, pins_info=pins_info, **kwargs)
 
 
-class GenRectangle(VGroup):
+class GenRectangle(VGroupLogicBase):
     """A generic block with a Rectangle and labeled pins."""
 
     def __init__(
@@ -614,21 +721,25 @@ class GenRectangle(VGroup):
         for pin in self._get_input_pins():
             if getattr(pin, "label_str", None) == label:
                 return pin
+        print(f"No input pin found with label '{label}': {self._get_input_pins()}")
         return None
 
     def get_output_by_label(self, label):
         for pin in self._get_output_pins():
             if getattr(pin, "label_str", None) == label:
                 return pin
+        print(f"No output pin found with label '{label}': {self._get_output_pins()}")
         return None
 
     def dim_all(self):
-        self.shape.set_stroke(opacity=0.1)
-        self.label.set_opacity(0.1)
+        super().dim_all()
+        self.shape.set_stroke(opacity=self.dim_value)
+        self.label.set_opacity(self.dim_value)
         for pin in self.pins:
-            pin.set_opacity(0.1)
+            pin.set_opacity(self.dim_value)
 
     def undim_all(self):
+        super().undim_all()
         self.shape.set_stroke(opacity=1)
         self.label.set_opacity(1)
         for pin in self.pins:
@@ -643,6 +754,7 @@ class PC(GenRectangle):
             {
                 "pin_side": PinSide.LEFT,
                 "pin_length": 0.5,
+                "pin_type": PinType.INPUT,
                 "label": "NextPC",
                 "bit_width": 32,
                 "show_label": False,
@@ -650,6 +762,7 @@ class PC(GenRectangle):
             {
                 "pin_side": PinSide.RIGHT,
                 "pin_length": 0.5,
+                "pin_type": PinType.OUTPUT,
                 "label": "PC",
                 "bit_width": 32,
                 "show_label": False,
@@ -671,12 +784,14 @@ class InstructionMemory(GenRectangle):
         pins_info = [
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "RAddr",
                 "bit_width": 32,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.RIGHT,
+                "pin_type": PinType.OUTPUT,
                 "label": "Inst",
                 "bit_width": 32,
                 "show_label": True,
@@ -700,18 +815,21 @@ class DataMemory(GenRectangle):
         pins_info = [
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "Addr",
                 "bit_width": 32,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "WriteData",
                 "bit_width": 32,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.TOP,
+                "pin_type": PinType.INPUT,
                 "label": "MemWrite",
                 "bit_width": 1,
                 "show_label": True,
@@ -720,6 +838,7 @@ class DataMemory(GenRectangle):
             },
             {
                 "pin_side": PinSide.RIGHT,
+                "pin_type": PinType.OUTPUT,
                 "label": "ReadData",
                 "bit_width": 32,
                 "show_label": True,
@@ -745,36 +864,42 @@ class RegisterFile(GenRectangle):
         pins_info = [
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "ReadReg1",
                 "bit_width": 5,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "ReadReg2",
                 "bit_width": 5,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "WriteReg",
                 "bit_width": 5,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.LEFT,
+                "pin_type": PinType.INPUT,
                 "label": "WriteData",
                 "bit_width": 32,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.RIGHT,
+                "pin_type": PinType.OUTPUT,
                 "label": "ReadData1",
                 "bit_width": 32,
                 "show_label": True,
             },
             {
                 "pin_side": PinSide.RIGHT,
+                "pin_type": PinType.OUTPUT,
                 "label": "ReadData2",
                 "bit_width": 32,
                 "show_label": True,

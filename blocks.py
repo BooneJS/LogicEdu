@@ -15,7 +15,7 @@ from manim import (
 )
 import numpy as np
 from typing import List
-from basics import Pin, PinSide
+from basics import Pin, PinSide, PinType
 import math
 
 
@@ -61,13 +61,25 @@ class ALUZ(VGroup):
             .shift(DOWN * 0.65)
         )
         self.input0_pin = Pin(
-            pin_side=PinSide.LEFT, label="in0", show_label=True, font_size=30
+            pin_side=PinSide.LEFT,
+            label="in0",
+            show_label=True,
+            font_size=30,
+            pin_type=PinType.INPUT,
         ).shift(self.alu_shape.get_input0_start())
         self.input1_pin = Pin(
-            pin_side=PinSide.LEFT, label="in1", show_label=True, font_size=30
+            pin_side=PinSide.LEFT,
+            label="in1",
+            show_label=True,
+            font_size=30,
+            pin_type=PinType.INPUT,
         ).shift(self.alu_shape.get_input1_start())
         self.result_pin = Pin(
-            pin_side=PinSide.RIGHT, label="result", show_label=True, font_size=30
+            pin_side=PinSide.RIGHT,
+            label="result",
+            show_label=True,
+            font_size=30,
+            pin_type=PinType.OUTPUT,
         ).shift(self.alu_shape.get_result_start())
         self.zero_pin = Pin(
             pin_side=PinSide.RIGHT,
@@ -75,6 +87,7 @@ class ALUZ(VGroup):
             show_label=True,
             color=BLUE,
             font_size=26,
+            pin_type=PinType.OUTPUT,
         ).shift(self.alu_shape.get_zero_start())
 
         self.add(
@@ -107,8 +120,7 @@ class Mux(VGroup):
         super().__init__(**kwargs)
         step = 0.25
         height = 2 * step + (self.num_inputs - 1) * step
-        self.inputs: List[Pin] = []
-        self.outputs: List[Pin] = []
+        self.pins: List[Pin] = []
         self.shape = Polygon(
             ORIGIN,
             UP * step + RIGHT * step,
@@ -118,22 +130,28 @@ class Mux(VGroup):
         )
         self.add(self.shape)
         for i in range(self.num_inputs):
-            self.inputs.append(
-                Pin(pin_side=PinSide.LEFT, font_size=14).shift(UP * step * (i + 1))
+            self.pins.append(
+                Pin(pin_side=PinSide.LEFT, font_size=14, pin_type=PinType.INPUT).shift(
+                    UP * step * (i + 1)
+                )
             )
             label = Text(
                 f"{self.num_inputs - 1 - i}", font_size=14, color=WHITE
-            ).next_to(self.inputs[i], RIGHT * step)
+            ).next_to(self.pins[i], RIGHT * step)
             self.add(label)
-        self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, label=f"{i}").shift(
+        self.pins.append(
+            Pin(pin_side=PinSide.RIGHT, label=f"{i}", pin_type=PinType.OUTPUT).shift(
                 UP * (height / 2) + RIGHT * step
             )
         )
         start = (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
-        self.inputs.append(Pin(pin_side=PinSide.BOTTOM, label="sel").shift(start))
+        self.pins.append(
+            Pin(pin_side=PinSide.BOTTOM, label="sel", pin_type=PinType.INPUT).shift(
+                start
+            )
+        )
 
-        self.add(*self.inputs, *self.outputs)
+        self.add(*self.pins)
 
 
 class DFFVariant(enum.Enum):
@@ -247,8 +265,7 @@ class GenEllipse(VGroup):
             ],
         )
         super().__init__(**kwargs)
-        self.inputs: List[Pin] = []
-        self.outputs: List[Pin] = []
+        self.pins: List[Pin] = []
 
         self.shape = Ellipse(
             height=ellipse_height,
@@ -280,7 +297,7 @@ class GenEllipse(VGroup):
                 pin = Pin(**pin_info, **kwargs)
                 match pin.pin_side:
                     case PinSide.LEFT:
-                        self.inputs.append(pin)
+                        self.pins.append(pin)
                         y_shift = ellipse_height / 2 - pin_y_down_distance
                         x_shift = ellipse_width / 2 - pin_x_over_distance
                         pin.shift(LEFT * x_half + UP * y_shift)
@@ -293,7 +310,7 @@ class GenEllipse(VGroup):
                             pin.line.get_end(),
                         )
                     case PinSide.RIGHT:
-                        self.outputs.append(pin)
+                        self.pins.append(pin)
                         y_shift = ellipse_height / 2 - pin_y_down_distance
                         pin.shift(RIGHT * x_half + UP * y_shift)
                         pin.line.put_start_and_end_on(
@@ -305,14 +322,14 @@ class GenEllipse(VGroup):
                             pin.line.get_end(),
                         )
                     case PinSide.TOP:
-                        self.inputs.append(pin)
+                        self.pins.append(pin)
                         pin.shift(
                             UP * y_half
                             + LEFT * ellipse_width / 2
                             + RIGHT * pin_x_over_distance
                         )
                     case PinSide.BOTTOM:
-                        self.inputs.append(pin)
+                        self.pins.append(pin)
                         pin.shift(
                             DOWN * y_half
                             + LEFT * ellipse_width / 2
@@ -322,20 +339,26 @@ class GenEllipse(VGroup):
                 pin_y_down_distance += pin_gap
                 pin_x_over_distance += pin_gap
 
+    def _get_input_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+
+    def _get_output_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+
     def get_input_by_index(self, index: int) -> Pin:
-        return self.inputs[index]
+        return self._get_input_pins()[index]
 
     def get_input_by_label(self, label: str) -> Pin:
-        for pin in self.inputs:
+        for pin in self._get_input_pins():
             if pin.label.text == label:
                 return pin
         raise ValueError(f"No input pin found with label '{label}'")
 
     def get_output_by_index(self, index: int) -> Pin:
-        return self.outputs[index]
+        return self._get_output_pins()[index]
 
     def get_output_by_label(self, label: str) -> Pin:
-        for pin in self.outputs:
+        for pin in self._get_output_pins():
             if pin.label.text == label:
                 return pin
         raise ValueError(f"No output pin found with label '{label}'")
@@ -351,6 +374,18 @@ class GenEllipse(VGroup):
             return 0
         x = a - a * math.sqrt(inside)
         return x
+
+    def dim_all(self):
+        self.shape.set_stroke(opacity=0.1)
+        self.label.set_opacity(0.1)
+        for pin in self.pins:
+            pin.set_opacity(0.1)
+
+    def undim_all(self):
+        self.shape.set_stroke(opacity=1)
+        self.label.set_opacity(1)
+        for pin in self.pins:
+            pin.set_opacity(1)
 
 
 class SignExtend(GenEllipse):
@@ -551,9 +586,7 @@ class GenRectangle(VGroup):
         self.add(self.label)
 
         # Add pins
-        self.inputs: List[Pin] = []
-        self.outputs: List[Pin] = []
-        self.pins = []
+        self.pins: List[Pin] = []
         for pin_info in pins_info:
             # Copy to avoid mutating the original dict
             pin_kwargs = dict(pin_info)
@@ -562,36 +595,44 @@ class GenRectangle(VGroup):
             # Position the pin on the rectangle
             if pin_side == PinSide.LEFT:
                 pin.shift(LEFT * (self.rectangle_width / 2))
-                self.inputs.append(pin)
             elif pin_side == PinSide.RIGHT:
                 pin.shift(RIGHT * (self.rectangle_width / 2))
-                self.outputs.append(pin)
             elif pin_side == PinSide.TOP:
                 pin.shift(UP * (self.rectangle_height / 2))
-                self.inputs.append(pin)
             elif pin_side == PinSide.BOTTOM:
                 pin.shift(DOWN * (self.rectangle_height / 2))
-                self.inputs.append(pin)
+            self.pins.append(pin)
             self.add(pin)
 
+    def _get_input_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+
+    def _get_output_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+
     def get_input_by_label(self, label):
-        for pin in self.pins:
-            if getattr(pin, "label_str", None) == label and pin.pin_side in [
-                PinSide.LEFT,
-                PinSide.BOTTOM,
-                PinSide.TOP,
-            ]:
+        for pin in self._get_input_pins():
+            if getattr(pin, "label_str", None) == label:
                 return pin
         return None
 
     def get_output_by_label(self, label):
-        for pin in self.pins:
-            if (
-                getattr(pin, "label_str", None) == label
-                and pin.pin_side == PinSide.RIGHT
-            ):
+        for pin in self._get_output_pins():
+            if getattr(pin, "label_str", None) == label:
                 return pin
         return None
+
+    def dim_all(self):
+        self.shape.set_stroke(opacity=0.1)
+        self.label.set_opacity(0.1)
+        for pin in self.pins:
+            pin.set_opacity(0.1)
+
+    def undim_all(self):
+        self.shape.set_stroke(opacity=1)
+        self.label.set_opacity(1)
+        for pin in self.pins:
+            pin.set_opacity(1)
 
 
 class PC(GenRectangle):
@@ -648,7 +689,7 @@ class InstructionMemory(GenRectangle):
             rectangle_width=1.2,
             **kwargs,
         )
-        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - 0.3))
+        self._get_input_pins()[0].shift(UP * ((self.rectangle_height / 2) - 0.3))
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.3))
 
 
@@ -691,9 +732,9 @@ class DataMemory(GenRectangle):
             rectangle_width=1.2,
             **kwargs,
         )
-        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - 0.2))
-        self.inputs[1].shift(DOWN * ((self.rectangle_height / 2) - 0.3))
-        self.outputs[0].shift(UP * 0.3)
+        self._get_input_pins()[0].shift(UP * ((self.rectangle_height / 2) - 0.2))
+        self._get_input_pins()[1].shift(DOWN * ((self.rectangle_height / 2) - 0.3))
+        self._get_output_pins()[0].shift(UP * 0.3)
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.6))
 
 
@@ -750,17 +791,21 @@ class RegisterFile(GenRectangle):
         pin_increment = 0.5
 
         # Place LHS pins
-        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        self._get_input_pins()[0].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
         lhs_offset += pin_increment
-        self.inputs[1].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        self._get_input_pins()[1].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
         lhs_offset += pin_increment
-        self.inputs[2].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        self._get_input_pins()[2].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
         lhs_offset += pin_increment
-        self.inputs[3].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        self._get_input_pins()[3].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
 
         # Place RHS pins
         rhs_offset = 0.3 + pin_increment / 2 - 0.005
-        self.outputs[0].shift(UP * ((self.rectangle_height / 2) - rhs_offset))
+        self._get_output_pins()[0].shift(
+            UP * ((self.rectangle_height / 2) - rhs_offset)
+        )
         rhs_offset += pin_increment
-        self.outputs[1].shift(UP * ((self.rectangle_height / 2) - rhs_offset))
+        self._get_output_pins()[1].shift(
+            UP * ((self.rectangle_height / 2) - rhs_offset)
+        )
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.2) + RIGHT * 0.2)

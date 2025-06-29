@@ -1,5 +1,6 @@
 from manim import (
     BLUE,
+    GREY,
     Circle,
     Dot,
     DOWN,
@@ -12,6 +13,7 @@ from manim import (
     UP,
     VGroup,
     WHITE,
+    NumberPlane,
 )
 import enum
 from manim.typing import Point3DLike
@@ -33,6 +35,11 @@ class PinSide(enum.Enum):
     BOTTOM = 4
 
 
+class PinType(enum.Enum):
+    INPUT = 1
+    OUTPUT = 2
+
+
 class Pin(VGroup):
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
@@ -40,6 +47,7 @@ class Pin(VGroup):
         self.show_label = kwargs.pop("show_label", False)
         self.pin_side = kwargs.pop("pin_side", PinSide.LEFT)
         self.pin_length = kwargs.pop("pin_length", 0.6)
+        self.pin_type = kwargs.pop("pin_type", PinType.INPUT)
         self.dot_radius = kwargs.pop("dot_radius", 0.05)
         self.not_bubble_radius = kwargs.pop("not_bubble_radius", 0.12 / 2)
         self.bit_width = kwargs.pop("bit_width", 1)
@@ -200,3 +208,26 @@ class ConnectorLine(VGroup):
                 Line(mid_segment_end, end_pin.line.get_end(), **kwargs),
             )
         self.add(self.line)
+
+
+def create_grid() -> NumberPlane:
+    """Create a NumberPlane object to represent the grid. x_range and y_range define the
+    visible area of the grid. x_length and y_length define the spacing between the major grid lines (deltas).
+    """
+    return NumberPlane(
+        x_range=[-7, 7, 0.5],  # Start, End, Step (delta between lines)
+        y_range=[-4, 4, 0.5],  # Start, End, Step (delta between lines)
+        x_length=14,  # Total length in x-direction
+        y_length=8,  # Total length in y-direction
+        # Configure the appearance of the grid lines
+        axis_config={
+            "color": BLUE,
+            "stroke_width": 1,  # Thickness of the grid lines
+            "stroke_opacity": 0.3,
+        },  # Color of the axes (major lines)
+        background_line_style={
+            "stroke_color": BLUE,  # Color of the background grid lines
+            "stroke_width": 1,  # Thickness of the grid lines
+            "stroke_opacity": 0.3,  # Faintness/transparency of the grid lines (0.0 to 1.0)
+        },
+    )

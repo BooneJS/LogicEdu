@@ -10,11 +10,9 @@ from manim import (
     DOWN,
     RIGHT,
     Create,
-    ImageMobject,
-    NumberPlane,
 )
 
-from basics import ConnectorLine, GRID, grid_round
+from basics import ConnectorLine, GRID, create_grid
 from blocks import *
 from logic_gates import *
 
@@ -22,26 +20,8 @@ from logic_gates import *
 class Demo(Scene):
     def construct(self):
 
-        # Create a NumberPlane object to represent the grid.
-        # x_range and y_range define the visible area of the grid.
-        # x_length and y_length define the spacing between the major grid lines (deltas).
-        grid = NumberPlane(
-            x_range=[-7, 7, 0.5],  # Start, End, Step (delta between lines)
-            y_range=[-4, 4, 0.5],  # Start, End, Step (delta between lines)
-            x_length=14,  # Total length in x-direction
-            y_length=8,  # Total length in y-direction
-            # Configure the appearance of the grid lines
-            axis_config={"color": BLUE},  # Color of the axes (major lines)
-            background_line_style={
-                "stroke_color": BLUE,  # Color of the background grid lines
-                "stroke_width": 2,  # Thickness of the grid lines
-                "stroke_opacity": 0.2,  # Faintness/transparency of the grid lines (0.0 to 1.0)
-            },
-        )
-
-        # You can add the grid directly or animate its appearance.
-        # self.add(grid) # To add it immediately without animation
-        self.play(FadeIn(grid))  # To animate the grid fading into the scene
+        grid = create_grid()
+        self.play(FadeIn(grid))
 
         alu = ALUZ()
         alu.scale(0.5).move_to(LEFT * 3 + DOWN)

@@ -208,6 +208,16 @@ class UnaryLogic(VGroup):
     def get_height(self):
         return self.shape.get_height()
 
+    def dim_all(self):
+        self.shape.set_stroke(opacity=0.1)
+        for pin in self.inputs + self.outputs:
+            pin.set_opacity(0.1)
+
+    def undim_all(self):
+        self.shape.set_stroke(opacity=1)
+        for pin in self.inputs + self.outputs:
+            pin.set_opacity(1)
+
 
 class BinaryLogic(VGroup):
     def __init__(self, logic_type: LogicType, **kwargs):

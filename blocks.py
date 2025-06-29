@@ -384,7 +384,7 @@ class Control(GenEllipse):
         label = "Control"
         ellipse_height = kwargs.pop("ellipse_height", 3)
         ellipse_width = kwargs.pop("ellipse_width", 1)
-        input_pin_length = 1.2
+        input_pin_length = 1.3
         output_pin_length = 1.0
         pin_kwargs = {
             "show_label": True,

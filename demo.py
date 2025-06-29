@@ -100,8 +100,11 @@ class Demo(Scene):
         imem = InstructionMemory(color=WHITE).move_to(RIGHT * 2.5 + DOWN)
         self.play(Create(imem))
 
-        dmem = DataMemory(color=WHITE).move_to(RIGHT * 4.5 + UP * 1)
+        dmem = DataMemory(color=WHITE).move_to(RIGHT * 4.5 + UP * 3)
         self.play(Create(dmem))
+
+        registers = RegisterFile(color=WHITE).move_to(RIGHT * 5 + DOWN * 2.2)
+        self.play(Create(registers))
 
         wires = VGroup()
 

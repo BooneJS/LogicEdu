@@ -695,3 +695,72 @@ class DataMemory(GenRectangle):
         self.inputs[1].shift(DOWN * ((self.rectangle_height / 2) - 0.3))
         self.outputs[0].shift(UP * 0.3)
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.6))
+
+
+class RegisterFile(GenRectangle):
+    """Creates a Register File block."""
+
+    def __init__(self, **kwargs):
+        pins_info = [
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "ReadReg1",
+                "bit_width": 5,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "ReadReg2",
+                "bit_width": 5,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "WriteReg",
+                "bit_width": 5,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.LEFT,
+                "label": "WriteData",
+                "bit_width": 32,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ReadData1",
+                "bit_width": 32,
+                "show_label": True,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ReadData2",
+                "bit_width": 32,
+                "show_label": True,
+            },
+        ]
+        super().__init__(
+            label="Registers",
+            pins_info=pins_info,
+            rectangle_height=2.5,
+            rectangle_width=1.5,
+            **kwargs,
+        )
+        lhs_offset = 0.3
+        pin_increment = 0.5
+
+        # Place LHS pins
+        self.inputs[0].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        lhs_offset += pin_increment
+        self.inputs[1].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        lhs_offset += pin_increment
+        self.inputs[2].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+        lhs_offset += pin_increment
+        self.inputs[3].shift(UP * ((self.rectangle_height / 2) - lhs_offset))
+
+        # Place RHS pins
+        rhs_offset = 0.3 + pin_increment / 2 - 0.005
+        self.outputs[0].shift(UP * ((self.rectangle_height / 2) - rhs_offset))
+        rhs_offset += pin_increment
+        self.outputs[1].shift(UP * ((self.rectangle_height / 2) - rhs_offset))
+        self.label.shift(DOWN * (self.rectangle_height / 2 - 0.2) + RIGHT * 0.2)

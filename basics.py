@@ -193,6 +193,13 @@ class Pin(VGroupLogicBase):
         self.bus_text.set_opacity(1)
 
 
+class ConnectorFirstSegmentDir(enum.Enum):
+    """ConnectorFirstSegmentDir is used to determine the first direction taken by a connector line."""
+
+    X_AXIS = 1
+    Y_AXIS = 2
+
+
 class ConnectorLine(VGroupLogicBase):
     """ConnectorLine is used to connect two pins directly. If a mid_y_axis is provided,
     3 segments are created: the first and last traverse x-axis only, and the middle segment
@@ -204,30 +211,53 @@ class ConnectorLine(VGroupLogicBase):
         end_pin: Pin,
         **kwargs,
     ):
+
         manhatten: bool = kwargs.pop("manhatten", False)
-        x_axis_shift: float = kwargs.pop("x_axis_shift", 0)
+        axis_shift: float = kwargs.pop("axis_shift", 0)
+        # First segment direction defaults to X-axis.
+        first_segment_dir: ConnectorFirstSegmentDir = kwargs.pop(
+            "first_segment_dir", ConnectorFirstSegmentDir.X_AXIS
+        )
         super().__init__(**kwargs)
+
         if manhatten is False:
             self.line = Line(start_pin.line.get_end(), end_pin.line.get_end(), **kwargs)
         else:
             # If one of the pins is TOP or BOTTOM, that pin's x-axis is the midpoint to get a vertical line.
-            mid_x_axis = 0
+            axis_to_index = (
+                0 if first_segment_dir == ConnectorFirstSegmentDir.X_AXIS else 1
+            )
+            mid_axis = 0
             if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-                mid_x_axis = start_pin.line.get_end()[0]
+                mid_axis = start_pin.line.get_end()[axis_to_index]
             elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-                mid_x_axis = end_pin.line.get_end()[0]
+                mid_axis = end_pin.line.get_end()[axis_to_index]
             else:
-                mid_x_axis = (
+                mid_axis = (
                     np.round(
-                        (start_pin.line.get_end()[0] + end_pin.line.get_end()[0]) / 2, 1
+                        (
+                            start_pin.line.get_end()[axis_to_index]
+                            + end_pin.line.get_end()[axis_to_index]
+                        )
+                        / 2,
+                        1,
                     )
-                    + x_axis_shift
+                    + axis_shift
                 )
 
-            # X-axis of midpoint, Y-axis of start_pin.
-            mid_segment_start = ORIGIN + [mid_x_axis, start_pin.line.get_end()[1], 0]
-            # X-axis of midpoint, Y-axis of end_pin.
-            mid_segment_end = ORIGIN + [mid_x_axis, end_pin.line.get_end()[1], 0]
+            mid_segment_start = 0
+            mid_segment_end = 0
+            if first_segment_dir == ConnectorFirstSegmentDir.X_AXIS:
+                # X-axis of midpoint, Y-axis of start_pin.
+                mid_segment_start = ORIGIN + [mid_axis, start_pin.line.get_end()[1], 0]
+                # X-axis of midpoint, Y-axis of end_pin.
+                mid_segment_end = ORIGIN + [mid_axis, end_pin.line.get_end()[1], 0]
+            else:
+                # Y-axis of midpoint, X-axis of start_pin.
+                mid_segment_start = ORIGIN + [start_pin.line.get_end()[0], mid_axis, 0]
+                # Y-axis of midpoint, X-axis of end_pin.
+                mid_segment_end = ORIGIN + [end_pin.line.get_end()[0], mid_axis, 0]
+
             self.line = VGroup(
                 Line(start_pin.line.get_end(), mid_segment_start, **kwargs),
                 Line(mid_segment_start, mid_segment_end, **kwargs),
@@ -244,6 +274,29 @@ class ConnectorLine(VGroupLogicBase):
         super().undim_all()
         for line in self.line:
             line.set_opacity(1)
+
+
+class ArbitrarySegmentLine(VGroupLogicBase):
+    """ArbitrarySegmentLine is used to connect each point given in the list of vertices."""
+
+    def __init__(self, *vertices: Point3DLike, **kwargs):
+        super().__init__(**kwargs)
+        self.vertices = vertices
+        self.segments = VGroup()
+        for i in range(len(self.vertices) - 1):
+            segment = Line(vertices[i], vertices[i + 1], **kwargs)
+            self.segments.add(segment)
+        self.add(*self.segments)
+
+    def dim_all(self):
+        super().dim_all()
+        for segment in self.segments:
+            segment.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        super().undim_all()
+        for segment in self.segments:
+            segment.set_opacity(1)
 
 
 def create_grid() -> NumberPlane:

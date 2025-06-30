@@ -68,7 +68,7 @@ class Demo(Scene):
         )
         self.play(FadeIn(shift_left2))
 
-        control = Control(color=BLUE).scale(0.75).move_to(DOWN * 2.5)
+        control = ControlUnit(color=BLUE).scale(0.75).move_to(DOWN * 2.5)
         self.play(Create(control))
 
         alu_control = AluControl(color=BLUE).scale(0.5).move_to(RIGHT * 1.5 + DOWN * 0)
@@ -114,7 +114,7 @@ class Demo(Scene):
                 alu.get_result_connection(),
                 gates_vg[0].get_input1_connection(),
                 manhatten=True,
-                x_axis_shift=GRID,
+                axis_shift=GRID,
             ),
         )
         wires.add(

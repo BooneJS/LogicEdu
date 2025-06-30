@@ -12,6 +12,7 @@ from manim import (
     UP,
     DOWN,
     ORIGIN,
+    PI,
 )
 import numpy as np
 from typing import List
@@ -220,6 +221,7 @@ class Mux(VGroupLogicBase):
 
     def __init__(self, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
+        self.pin_length = kwargs.pop("pin_length", 0.5)
         super().__init__(**kwargs)
         step = 0.25
         height = 2 * step + (self.num_inputs - 1) * step
@@ -234,27 +236,44 @@ class Mux(VGroupLogicBase):
         self.add(self.shape)
         for i in range(self.num_inputs):
             self.pins.append(
-                Pin(pin_side=PinSide.LEFT, font_size=14, pin_type=PinType.INPUT).shift(
-                    UP * step * (i + 1)
-                )
+                Pin(
+                    pin_side=PinSide.LEFT,
+                    font_size=14,
+                    pin_length=self.pin_length,
+                    pin_type=PinType.INPUT,
+                ).shift(UP * step * (self.num_inputs - i))
             )
-            label = Text(
-                f"{self.num_inputs - 1 - i}", font_size=14, color=WHITE
-            ).next_to(self.pins[i], RIGHT * step)
+            label = Text(f"{i}", font_size=14, color=WHITE).next_to(
+                self.pins[i], RIGHT * step
+            )
             self.add(label)
         self.pins.append(
-            Pin(pin_side=PinSide.RIGHT, label=f"{i}", pin_type=PinType.OUTPUT).shift(
-                UP * (height / 2) + RIGHT * step
-            )
+            Pin(
+                pin_side=PinSide.RIGHT,
+                label=f"{i}",
+                pin_length=self.pin_length,
+                pin_type=PinType.OUTPUT,
+            ).shift(UP * (height / 2) + RIGHT * step)
         )
         start = (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
         self.pins.append(
-            Pin(pin_side=PinSide.BOTTOM, label="sel", pin_type=PinType.INPUT).shift(
-                start
-            )
+            Pin(
+                pin_side=PinSide.BOTTOM,
+                label="sel",
+                pin_length=self.pin_length,
+                pin_type=PinType.INPUT,
+            ).shift(start)
         )
 
         self.add(*self.pins)
+
+    def get_input_by_index(self, index: int) -> Pin:
+        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+        return input_pins[index]
+
+    def get_output_by_index(self, index: int) -> Pin:
+        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+        return output_pins[index]
 
 
 class DFFVariant(enum.Enum):
@@ -347,7 +366,7 @@ class GenEllipse(VGroupLogicBase):
 
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
-        self.label = kwargs.pop("label", "GenEllipse")
+        self.label_text = kwargs.pop("label_text", "GenEllipse")
         ellipse_height = kwargs.pop("height", 2)
         ellipse_width = kwargs.pop("width", 1)
         pins_info = kwargs.pop(
@@ -381,8 +400,8 @@ class GenEllipse(VGroupLogicBase):
 
         x_half = ellipse_width / 2
         y_half = ellipse_height / 2
-        self.label_text = Text(f"{self.label}", font_size=24, **kwargs)
-        self.add(self.label_text)
+        self.label = Text(f"{self.label_text}", font_size=24, **kwargs).rotate(PI / 2)
+        self.add(self.label)
 
         pin_dirs = [pin for pin in PinSide]
         pin_gap = 0.3
@@ -519,11 +538,11 @@ class SignExtend(GenEllipse):
         super().__init__(label=label, pins_info=pins_info, **kwargs)
 
 
-class Control(GenEllipse):
+class ControlUnit(GenEllipse):
     """Creates a Control block."""
 
     def __init__(self, **kwargs):
-        label = "Control"
+        label_text = "Control"
         ellipse_height = kwargs.pop("ellipse_height", 3)
         ellipse_width = kwargs.pop("ellipse_width", 1)
         input_pin_length = 1.3
@@ -538,6 +557,7 @@ class Control(GenEllipse):
                 "label": "inst[31:26]",
                 "bit_width": 6,
                 "pin_length": input_pin_length,
+                "pin_type": PinType.INPUT,
                 **pin_kwargs,
             },
             {
@@ -545,6 +565,7 @@ class Control(GenEllipse):
                 "label": "RegDst",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -552,6 +573,7 @@ class Control(GenEllipse):
                 "label": "Branch",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -559,6 +581,7 @@ class Control(GenEllipse):
                 "label": "MemRead",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -566,6 +589,7 @@ class Control(GenEllipse):
                 "label": "MemtoReg",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -573,6 +597,7 @@ class Control(GenEllipse):
                 "label": "ALUOp",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -580,6 +605,7 @@ class Control(GenEllipse):
                 "label": "MemWrite",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -587,6 +613,7 @@ class Control(GenEllipse):
                 "label": "ALUSrc",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
@@ -594,11 +621,12 @@ class Control(GenEllipse):
                 "label": "RegWrite",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
         ]
         super().__init__(
-            label=label,
+            label_text=label_text,
             pins_info=pins_info,
             height=ellipse_height,
             width=ellipse_width,
@@ -889,6 +917,15 @@ class RegisterFile(GenRectangle):
                 "label": "WriteData",
                 "bit_width": 32,
                 "show_label": True,
+            },
+            {
+                "pin_side": PinSide.TOP,
+                "pin_type": PinType.INPUT,
+                "label": "RegWrite",
+                "bit_width": 1,
+                "show_label": True,
+                "inner_label": False,
+                "pin_length": 0.9,
             },
             {
                 "pin_side": PinSide.RIGHT,

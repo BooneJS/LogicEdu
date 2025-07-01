@@ -275,6 +275,18 @@ class Mux(VGroupLogicBase):
         output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
         return output_pins[index]
 
+    def dim_all(self):
+        super().dim_all()
+        self.shape.set_stroke(opacity=self.dim_value)
+        for pin in self.pins:
+            pin.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        super().undim_all()
+        self.shape.set_stroke(opacity=1)
+        for pin in self.pins:
+            pin.set_opacity(1)
+
 
 class DFFVariant(enum.Enum):
     """Variant of DFF."""
@@ -518,7 +530,7 @@ class SignExtend(GenEllipse):
     """Creates a SignExtend block."""
 
     def __init__(self, **kwargs):
-        label = " Sign-\nExtend"
+        label_text = " Sign-\nExtend"
         ellipse_height = kwargs.pop("ellipse_height", 2)
         ellipse_width = kwargs.pop("ellipse_width", 1.2)
         pins_info = [
@@ -535,7 +547,7 @@ class SignExtend(GenEllipse):
                 "show_label": False,
             },
         ]
-        super().__init__(label=label, pins_info=pins_info, **kwargs)
+        super().__init__(label_text=label_text, pins_info=pins_info, **kwargs)
 
 
 class ControlUnit(GenEllipse):

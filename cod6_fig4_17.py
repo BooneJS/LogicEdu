@@ -7,7 +7,15 @@ from manim import (
     BLUE,
     LEFT,
 )
-from blocks import PC, AdderPlus4, InstructionMemory, ControlUnit, RegisterFile, Mux
+from blocks import (
+    PC,
+    AdderPlus4,
+    InstructionMemory,
+    ControlUnit,
+    RegisterFile,
+    Mux,
+    SignExtend,
+)
 from basics import create_grid, ConnectorLine, DOWN, UP, GRID, ArbitrarySegmentLine
 
 
@@ -204,35 +212,52 @@ class Cod6Fig417(Scene):
         self.wait(1)
 
         # Manually route control.regdst to RegFile
-        if True:
-            upper_y = (UP * 0.5)[1]
-            left_x = (LEFT * 2.5)[0]
-            control_regdst_pin = control.get_output_by_label("RegDst")
-            if control_regdst_pin is None:
-                raise ValueError("RegDst output pin not found")
-            rf_write_reg_pin = regfile.get_input_by_label("WriteReg")
-            if rf_write_reg_pin is None:
-                raise ValueError("WriteReg input pin not found")
+        upper_y = (UP * 0.5)[1]
+        left_x = (LEFT * 2.5)[0]
+        control_regdst_pin = control.get_output_by_label("RegDst")
+        if control_regdst_pin is None:
+            raise ValueError("RegDst output pin not found")
+        rf_write_reg_pin = regfile.get_input_by_label("WriteReg")
+        if rf_write_reg_pin is None:
+            raise ValueError("WriteReg input pin not found")
 
-            regdst_wire = ArbitrarySegmentLine(
-                control_regdst_pin.dot.get_center(),
-                (
-                    control_regdst_pin.dot.get_center()[0],
-                    control_regdst_pin.dot.get_center()[1] + upper_y,
-                    0,
-                ),
-                (
-                    control_regdst_pin.dot.get_center()[0] + left_x,
-                    control_regdst_pin.dot.get_center()[1] + upper_y,
-                    0,
-                ),
-                (
-                    control_regdst_pin.dot.get_center()[0] + left_x,
-                    write_reg_mux.get_input_by_index(2).dot.get_center()[1],
-                    0,
-                ),
-                write_reg_mux.get_input_by_index(2).dot.get_center(),
-                color=BLUE,
-            )
-            self.add_object(regdst_wire)
-            self.play(Create(regdst_wire))
+        regdst_wire = ArbitrarySegmentLine(
+            control_regdst_pin.dot.get_center(),
+            (
+                control_regdst_pin.dot.get_center()[0],
+                control_regdst_pin.dot.get_center()[1] + upper_y,
+                0,
+            ),
+            (
+                control_regdst_pin.dot.get_center()[0] + left_x,
+                control_regdst_pin.dot.get_center()[1] + upper_y,
+                0,
+            ),
+            (
+                control_regdst_pin.dot.get_center()[0] + left_x,
+                write_reg_mux.get_input_by_index(2).dot.get_center()[1],
+                0,
+            ),
+            write_reg_mux.get_input_by_index(2).dot.get_center(),
+            color=BLUE,
+        )
+        self.add_object(regdst_wire)
+        self.play(Create(regdst_wire))
+
+        # Add Sign Extend
+        self.dim_all()
+        sign_extend = SignExtend(color=WHITE)
+        self.add_object(sign_extend)
+        self.play(Create(sign_extend))
+        self.wait(1)
+        self.play(sign_extend.animate.scale(0.6).shift(LEFT * 1.8 + DOWN * 2.5))
+        self.undim_all()
+        inst_sign_extend_bus = ConnectorLine(
+            start_pin=imem_inst_pin,
+            end_pin=sign_extend.get_input_by_index(0),
+            manhatten=True,
+            axis_shift=-7 * GRID,
+        )
+        self.add_object(inst_sign_extend_bus)
+        self.play(Create(inst_sign_extend_bus))
+        self.wait(1)

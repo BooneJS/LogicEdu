@@ -6,8 +6,11 @@ from manim import (
     WHITE,
     BLUE,
     LEFT,
+    RIGHT,
 )
 from blocks import (
+    AluControl,
+    ALUZ,
     PC,
     AdderPlus4,
     InstructionMemory,
@@ -260,4 +263,100 @@ class Cod6Fig417(Scene):
         )
         self.add_object(inst_sign_extend_bus)
         self.play(Create(inst_sign_extend_bus))
+        self.wait(1)
+
+        # Introduce ALU
+        self.dim_all()
+        alu = ALUZ(color=WHITE)
+        alu.shift(DOWN * alu.shape.get_height() / 2 + LEFT * alu.shape.get_width() / 2)
+        alu_0_pin = alu.get_input0_connection()
+        alu_1_pin = alu.get_input1_connection()
+        regfile_read_data1_pin = regfile.get_output_by_label("ReadData1")
+        if regfile_read_data1_pin is None:
+            raise ValueError("ReadData1 input pin not found")
+        regfile_read_data2_pin = regfile.get_output_by_label("ReadData2")
+        if regfile_read_data2_pin is None:
+            raise ValueError("ReadData2 input pin not found")
+        self.add_object(alu)
+        self.play(Create(alu))
+        self.wait(1)
+
+        alu_scale = 0.5
+        # ALU scales around shape center, so go down Y distance between center and pin0 and then again Y height of readdata1.pin
+        align_with_regfile_readdata1 = (
+            alu_scale * (alu_0_pin.dot.get_center()[1] - alu.shape.get_center()[1])
+            - regfile_read_data1_pin.dot.get_center()[1]
+        )
+        self.play(
+            alu.animate.scale(alu_scale).shift(
+                RIGHT * 0.5 + DOWN * align_with_regfile_readdata1
+            )
+        )
+        self.undim_all()
+
+        regfile_read_data1_wire = ConnectorLine(
+            start_pin=regfile_read_data1_pin,
+            end_pin=alu_0_pin,
+            manhatten=False,
+            axis_shift=-7 * GRID,
+        )
+        self.add_object(regfile_read_data1_wire)
+        self.play(Create(regfile_read_data1_wire))
+
+        # Add ALU1 Mux
+        alu_1_mux = Mux(pin_length=0.3, color=WHITE).scale(0.6)
+        alu_1_mux_shift = (
+            alu_1_pin.dot.get_center()
+            - alu_1_mux.get_output_by_index(0).dot.get_center()
+        )
+        alu_1_mux.shift(alu_1_mux_shift)
+        self.add_object(alu_1_mux)
+        self.play(FadeIn(alu_1_mux))
+
+        # Wire the ALU
+        rf_to_alu_1_bus = ConnectorLine(
+            start_pin=regfile_read_data2_pin,
+            end_pin=alu_1_mux.get_input_by_index(0),
+            manhatten=True,
+        )
+        self.add_object(rf_to_alu_1_bus)
+        self.play(Create(rf_to_alu_1_bus))
+        sign_extend_alu1_bus = ConnectorLine(
+            start_pin=sign_extend.get_output_by_index(0),
+            end_pin=alu_1_mux.get_input_by_index(1),
+            manhatten=True,
+        )
+        self.add_object(sign_extend_alu1_bus)
+        self.play(Create(sign_extend_alu1_bus))
+        self.wait(1)
+
+        # Add ALUControl
+        self.dim_all()
+        alu_control = AluControl(color=BLUE)
+        self.add_object(alu_control)
+        self.play(Create(alu_control))
+        self.wait(1)
+        self.play(alu_control.animate.scale(0.5).next_to(alu, DOWN))
+        self.wait(1)
+        self.undim_all()
+
+        # Wire the ALUControl
+        alu_control_inst_pin = alu_control.get_input_by_label("inst[5:0]")
+        if alu_control_inst_pin is None:
+            raise ValueError("inst[5:0] input pin not found")
+        bottom_line = inst_sign_extend_bus.line[0].get_end() + DOWN * 3
+        inst_to_alu_control_bus = ArbitrarySegmentLine(
+            imem_inst_pin.dot.get_center(),
+            inst_sign_extend_bus.line[0].get_end(),
+            bottom_line,
+            (
+                alu_control_inst_pin.dot.get_center()[0],
+                bottom_line[1],
+                0,
+            ),
+            alu_control_inst_pin.dot.get_center(),
+            color=WHITE,
+        )
+        self.add_object(inst_to_alu_control_bus)
+        self.play(Create(inst_to_alu_control_bus))
         self.wait(1)

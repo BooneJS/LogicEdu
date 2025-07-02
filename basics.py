@@ -176,7 +176,7 @@ class Pin(VGroupLogicBase):
         self.line.put_start_and_end_on(new_start, self.line.get_end())
 
     def __str__(self):
-        return f"Pin(label={self.label_str}, side={self.pin_side}, length={self.pin_length})"
+        return f"Pin(label={self.label_str}, side={self.pin_side}, length={self.pin_length}, type={self.pin_type})"
 
     def dim_all(self):
         super().dim_all()
@@ -191,6 +191,31 @@ class Pin(VGroupLogicBase):
         self.dot.set_opacity(1)
         self.bus_line.set_opacity(1)
         self.bus_text.set_opacity(1)
+
+
+class VGroupLogicObjectBase(VGroupLogicBase):
+    def __init__(self, **kwargs):
+        self.dim_value = kwargs.pop("dim_value", 0.3)
+        self.pins: List[Pin] = []
+        super().__init__(**kwargs)
+
+    def dim_all(self):
+        super().dim_all()
+
+    def undim_all(self):
+        super().undim_all()
+
+    def _get_input_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+
+    def _get_output_pins(self) -> List[Pin]:
+        return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+
+    def get_input_by_index(self, index: int) -> Pin:
+        return self._get_input_pins()[index]
+
+    def get_output_by_index(self, index: int) -> Pin:
+        return self._get_output_pins()[index]
 
 
 class ConnectorFirstSegmentDir(enum.Enum):

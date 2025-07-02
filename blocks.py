@@ -16,7 +16,7 @@ from manim import (
 )
 import numpy as np
 from typing import List
-from basics import Pin, PinSide, PinType, VGroupLogicBase
+from basics import Pin, PinSide, PinType, VGroupLogicBase, VGroupLogicObjectBase
 import math
 
 
@@ -50,15 +50,15 @@ class ClassicALUZShape(Polygon):
         return (self.get_vertices()[2] + self.get_vertices()[1]) / 2.0 + (UP * 0.75)
 
 
-class ALUZ(VGroupLogicBase):
+class ALUZ(VGroupLogicObjectBase):
     """Starting with classic ALU Shape, adds text and lines."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.alu_shape = ClassicALUZShape(**kwargs)
+        self.shape = ClassicALUZShape(**kwargs)
         self.label = (
             Text("ALU", font_size=36, color=WHITE)
-            .move_to(self.alu_shape.get_center())
+            .move_to(self.shape.get_center())
             .shift(DOWN * 0.65)
         )
         self.input0_pin = Pin(
@@ -67,21 +67,21 @@ class ALUZ(VGroupLogicBase):
             show_label=True,
             font_size=30,
             pin_type=PinType.INPUT,
-        ).shift(self.alu_shape.get_input0_start())
+        ).shift(self.shape.get_input0_start())
         self.input1_pin = Pin(
             pin_side=PinSide.LEFT,
             label="in1",
             show_label=True,
             font_size=30,
             pin_type=PinType.INPUT,
-        ).shift(self.alu_shape.get_input1_start())
+        ).shift(self.shape.get_input1_start())
         self.result_pin = Pin(
             pin_side=PinSide.RIGHT,
             label="result",
             show_label=True,
             font_size=30,
             pin_type=PinType.OUTPUT,
-        ).shift(self.alu_shape.get_result_start())
+        ).shift(self.shape.get_result_start())
         self.zero_pin = Pin(
             pin_side=PinSide.RIGHT,
             label="zero",
@@ -89,10 +89,10 @@ class ALUZ(VGroupLogicBase):
             color=BLUE,
             font_size=26,
             pin_type=PinType.OUTPUT,
-        ).shift(self.alu_shape.get_zero_start())
+        ).shift(self.shape.get_zero_start())
 
         self.add(
-            self.alu_shape,
+            self.shape,
             self.input0_pin,
             self.input1_pin,
             self.result_pin,
@@ -114,7 +114,7 @@ class ALUZ(VGroupLogicBase):
 
     def dim_all(self):
         super().dim_all()
-        self.alu_shape.set_stroke(opacity=self.dim_value)
+        self.shape.set_stroke(opacity=self.dim_value)
         self.label.set_opacity(self.dim_value)
         self.input0_pin.set_opacity(self.dim_value)
         self.input1_pin.set_opacity(self.dim_value)
@@ -123,7 +123,7 @@ class ALUZ(VGroupLogicBase):
 
     def undim_all(self):
         super().undim_all()
-        self.alu_shape.set_stroke(opacity=1)
+        self.shape.set_stroke(opacity=1)
         self.label.set_opacity(1)
         self.input0_pin.set_opacity(1)
         self.input1_pin.set_opacity(1)
@@ -131,12 +131,11 @@ class ALUZ(VGroupLogicBase):
         self.zero_pin.set_opacity(1)
 
 
-class Adder(VGroupLogicBase):
+class Adder(VGroupLogicObjectBase):
     """Creates an Adder block."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.pins: List[Pin] = []
         self.shape = ClassicALUZShape(**kwargs)
         self.label = (
             Text("Adder", font_size=36, color=WHITE)
@@ -216,7 +215,7 @@ class AdderPlus4(Adder):
         self.plus4_text.set_opacity(1)
 
 
-class Mux(VGroupLogicBase):
+class Mux(VGroupLogicObjectBase):
     """Creates a Mux block."""
 
     def __init__(self, **kwargs):
@@ -225,7 +224,6 @@ class Mux(VGroupLogicBase):
         super().__init__(**kwargs)
         step = 0.25
         height = 2 * step + (self.num_inputs - 1) * step
-        self.pins: List[Pin] = []
         self.shape = Polygon(
             ORIGIN,
             UP * step + RIGHT * step,
@@ -267,14 +265,6 @@ class Mux(VGroupLogicBase):
 
         self.add(*self.pins)
 
-    def get_input_by_index(self, index: int) -> Pin:
-        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
-        return input_pins[index]
-
-    def get_output_by_index(self, index: int) -> Pin:
-        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
-        return output_pins[index]
-
     def dim_all(self):
         super().dim_all()
         self.shape.set_stroke(opacity=self.dim_value)
@@ -296,7 +286,7 @@ class DFFVariant(enum.Enum):
     DFF_SR = "DFF_SR"
 
 
-class DFF(VGroupLogicBase):
+class DFF(VGroupLogicObjectBase):
     """Creates a DFF block."""
 
     def __init__(self, variant: DFFVariant = DFFVariant.DFF, **kwargs):
@@ -373,7 +363,7 @@ class DFF(VGroupLogicBase):
         return self.s_pin
 
 
-class GenEllipse(VGroupLogicBase):
+class GenEllipse(VGroupLogicObjectBase):
     """Creates a generic ellipse block used for SignExtend, Control, etc."""
 
     def __init__(self, **kwargs):
@@ -401,7 +391,6 @@ class GenEllipse(VGroupLogicBase):
             ],
         )
         super().__init__(**kwargs)
-        self.pins: List[Pin] = []
 
         self.shape = Ellipse(
             height=ellipse_height,
@@ -475,23 +464,11 @@ class GenEllipse(VGroupLogicBase):
                 pin_y_down_distance += pin_gap
                 pin_x_over_distance += pin_gap
 
-    def _get_input_pins(self) -> List[Pin]:
-        return [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
-
-    def _get_output_pins(self) -> List[Pin]:
-        return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
-
-    def get_input_by_index(self, index: int) -> Pin:
-        return self._get_input_pins()[index]
-
     def get_input_by_label(self, label: str) -> Pin:
         for pin in self._get_input_pins():
             if pin.label.text == label:
                 return pin
         raise ValueError(f"No input pin found with label '{label}'")
-
-    def get_output_by_index(self, index: int) -> Pin:
-        return self._get_output_pins()[index]
 
     def get_output_by_label(self, label: str) -> Pin:
         for pin in self._get_output_pins():
@@ -539,12 +516,14 @@ class SignExtend(GenEllipse):
                 "label": "in",
                 "bit_width": 16,
                 "show_label": False,
+                "pin_type": PinType.INPUT,
             },
             {
                 "pin_side": PinSide.RIGHT,
                 "label": "out",
                 "bit_width": 32,
                 "show_label": False,
+                "pin_type": PinType.OUTPUT,
             },
         ]
         super().__init__(label_text=label_text, pins_info=pins_info, **kwargs)
@@ -650,7 +629,7 @@ class AluControl(GenEllipse):
     """Creates a ALU Control block."""
 
     def __init__(self, **kwargs):
-        label = "  ALU\nControl"
+        label_text = "  ALU\nControl"
         ellipse_height = kwargs.pop("ellipse_height", 2)
         ellipse_width = kwargs.pop("ellipse_width", 1.2)
         pin_kwargs = {
@@ -663,22 +642,25 @@ class AluControl(GenEllipse):
                 "pin_side": PinSide.LEFT,
                 "label": "inst[5:0]",
                 "bit_width": 6,
+                "pin_type": PinType.INPUT,
                 **pin_kwargs,
             },
             {
                 "pin_side": PinSide.RIGHT,
                 "label": "decode",
                 "bit_width": 1,
+                "pin_type": PinType.OUTPUT,
                 **pin_kwargs,
             },
             {
                 "pin_side": PinSide.BOTTOM,
                 "label": "ALUOp",
                 "bit_width": 1,
+                "pin_type": PinType.INPUT,
                 **pin_kwargs,
             },
         ]
-        super().__init__(label=label, pins_info=pins_info, **kwargs)
+        super().__init__(label_text=label_text, pins_info=pins_info, **kwargs)
 
 
 class ShiftLeft(GenEllipse):
@@ -693,19 +675,21 @@ class ShiftLeft(GenEllipse):
                 "pin_side": PinSide.LEFT,
                 "label": "in",
                 "bit_width": 32,
+                "pin_type": PinType.INPUT,
                 "show_label": False,
             },
             {
                 "pin_side": PinSide.RIGHT,
                 "label": "out",
                 "bit_width": 32,
+                "pin_type": PinType.OUTPUT,
                 "show_label": False,
             },
         ]
         super().__init__(label=label, pins_info=pins_info, **kwargs)
 
 
-class GenRectangle(VGroupLogicBase):
+class GenRectangle(VGroupLogicObjectBase):
     """A generic block with a Rectangle and labeled pins."""
 
     def __init__(
@@ -733,7 +717,6 @@ class GenRectangle(VGroupLogicBase):
         self.add(self.label)
 
         # Add pins
-        self.pins: List[Pin] = []
         for pin_info in pins_info:
             # Copy to avoid mutating the original dict
             pin_kwargs = dict(pin_info)
@@ -750,12 +733,6 @@ class GenRectangle(VGroupLogicBase):
                 pin.shift(DOWN * (self.rectangle_height / 2))
             self.pins.append(pin)
             self.add(pin)
-
-    def _get_input_pins(self) -> List[Pin]:
-        return [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
-
-    def _get_output_pins(self) -> List[Pin]:
-        return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
 
     def get_input_by_label(self, label):
         for pin in self._get_input_pins():

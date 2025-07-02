@@ -55,7 +55,7 @@ class ALUZ(VGroupLogicBase):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.alu_shape = ClassicALUZShape()
+        self.alu_shape = ClassicALUZShape(**kwargs)
         self.label = (
             Text("ALU", font_size=36, color=WHITE)
             .move_to(self.alu_shape.get_center())
@@ -137,7 +137,7 @@ class Adder(VGroupLogicBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pins: List[Pin] = []
-        self.shape = ClassicALUZShape()
+        self.shape = ClassicALUZShape(**kwargs)
         self.label = (
             Text("Adder", font_size=36, color=WHITE)
             .move_to(self.shape.get_center())

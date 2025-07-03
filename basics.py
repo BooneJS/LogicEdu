@@ -217,6 +217,20 @@ class VGroupLogicObjectBase(VGroupLogicBase):
     def get_output_by_index(self, index: int) -> Pin:
         return self._get_output_pins()[index]
 
+    def get_input_by_label(self, label):
+        for pin in self._get_input_pins():
+            if getattr(pin, "label_str", None) == label:
+                return pin
+        print(f"No input pin found with label '{label}': {self._get_input_pins()}")
+        return None
+
+    def get_output_by_label(self, label):
+        for pin in self._get_output_pins():
+            if getattr(pin, "label_str", None) == label:
+                return pin
+        print(f"No output pin found with label '{label}': {self._get_output_pins()}")
+        return None
+
 
 class ConnectorFirstSegmentDir(enum.Enum):
     """ConnectorFirstSegmentDir is used to determine the first direction taken by a connector line."""
@@ -254,22 +268,22 @@ class ConnectorLine(VGroupLogicBase):
                 0 if first_segment_dir == ConnectorFirstSegmentDir.X_AXIS else 1
             )
             mid_axis = 0
-            if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-                mid_axis = start_pin.line.get_end()[axis_to_index]
-            elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-                mid_axis = end_pin.line.get_end()[axis_to_index]
-            else:
-                mid_axis = (
-                    np.round(
-                        (
-                            start_pin.line.get_end()[axis_to_index]
-                            + end_pin.line.get_end()[axis_to_index]
-                        )
-                        / 2,
-                        1,
+            # if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+            #     mid_axis = start_pin.line.get_end()[axis_to_index]
+            # elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+            #     mid_axis = end_pin.line.get_end()[axis_to_index]
+            # else:
+            mid_axis = (
+                np.round(
+                    (
+                        start_pin.line.get_end()[axis_to_index]
+                        + end_pin.line.get_end()[axis_to_index]
                     )
-                    + axis_shift
+                    / 2,
+                    1,
                 )
+                + axis_shift
+            )
 
             mid_segment_start = 0
             mid_segment_end = 0
@@ -286,6 +300,7 @@ class ConnectorLine(VGroupLogicBase):
 
             if verbose:
                 print(f"first_segment_dir: {first_segment_dir}")
+                print(f"axis_shift: {axis_shift}")
                 print(f"mid_axis: {mid_axis}")
                 print(f"mid_segment_start: {mid_segment_start}")
                 print(f"mid_segment_end: {mid_segment_end}")

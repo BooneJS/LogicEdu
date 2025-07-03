@@ -2,11 +2,13 @@ from manim import (
     Scene,
     VGroup,
     FadeIn,
+    FadeOut,
     Create,
     WHITE,
     BLUE,
     LEFT,
     RIGHT,
+    Text,
 )
 from blocks import (
     AluControl,
@@ -141,7 +143,6 @@ class Cod6Fig417(Scene):
             manhatten=True,
         )
         self.add_object(reg_write_wire)
-        self.play(Create(reg_write_wire))
 
         regfile_read_reg1_pin = regfile.get_input_by_label("ReadReg1")
         if regfile_read_reg1_pin is None:
@@ -153,7 +154,6 @@ class Cod6Fig417(Scene):
             axis_shift=-6 * GRID,
         )
         self.add_object(read_reg1_wire)
-        self.play(Create(read_reg1_wire))
 
         regfile_read_reg2_pin = regfile.get_input_by_label("ReadReg2")
         if regfile_read_reg2_pin is None:
@@ -165,7 +165,6 @@ class Cod6Fig417(Scene):
             axis_shift=-6 * GRID,
         )
         self.add_object(read_reg2_wire)
-        self.play(Create(read_reg2_wire))
 
         regfile_write_reg_pin = regfile.get_input_by_label("WriteReg")
         if regfile_write_reg_pin is None:
@@ -177,7 +176,6 @@ class Cod6Fig417(Scene):
         )
         write_reg_mux.shift(DOWN * mux_down_len)
         self.add_object(write_reg_mux)
-        self.play(FadeIn(write_reg_mux))
 
         regfile_write_data_pin = regfile.get_input_by_label("WriteData")
         if regfile_write_data_pin is None:
@@ -191,7 +189,6 @@ class Cod6Fig417(Scene):
             axis_shift=-2 * GRID,
         )
         self.add_object(write_reg_mux0_wire)
-        self.play(Create(write_reg_mux0_wire))
 
         # Connect inst to mux1
         write_reg_mux1_wire = ConnectorLine(
@@ -201,7 +198,6 @@ class Cod6Fig417(Scene):
             axis_shift=-2 * GRID,
         )
         self.add_object(write_reg_mux1_wire)
-        self.play(Create(write_reg_mux1_wire))
 
         # Connect mux0 to regfile
         regfile_mux2write_data_wire = ConnectorLine(
@@ -211,7 +207,6 @@ class Cod6Fig417(Scene):
             axis_shift=-2 * GRID,
         )
         self.add_object(regfile_mux2write_data_wire)
-        self.play(Create(regfile_mux2write_data_wire))
         self.wait(1)
 
         # Manually route control.regdst to RegFile
@@ -245,7 +240,17 @@ class Cod6Fig417(Scene):
             color=BLUE,
         )
         self.add_object(regdst_wire)
-        self.play(Create(regdst_wire))
+        self.play(
+            Create(reg_write_wire),
+            Create(read_reg1_wire),
+            Create(read_reg2_wire),
+            FadeIn(write_reg_mux),
+            Create(write_reg_mux0_wire),
+            Create(write_reg_mux1_wire),
+            Create(regfile_mux2write_data_wire),
+            Create(regdst_wire),
+        )
+        self.wait(1)
 
         # Add Sign Extend
         self.dim_all()
@@ -253,7 +258,7 @@ class Cod6Fig417(Scene):
         self.add_object(sign_extend)
         self.play(Create(sign_extend))
         self.wait(1)
-        self.play(sign_extend.animate.scale(0.6).shift(LEFT * 1.8 + DOWN * 2.5))
+        self.play(sign_extend.animate.scale(0.6).shift(LEFT * 1.8 + DOWN * 2.3))
         self.undim_all()
         inst_sign_extend_bus = ConnectorLine(
             start_pin=imem_inst_pin,
@@ -301,7 +306,6 @@ class Cod6Fig417(Scene):
             axis_shift=-7 * GRID,
         )
         self.add_object(regfile_read_data1_wire)
-        self.play(Create(regfile_read_data1_wire))
 
         # Add ALU1 Mux
         alu_1_mux = Mux(pin_length=0.3, color=WHITE).scale(0.6)
@@ -311,7 +315,6 @@ class Cod6Fig417(Scene):
         )
         alu_1_mux.shift(alu_1_mux_shift)
         self.add_object(alu_1_mux)
-        self.play(FadeIn(alu_1_mux))
 
         # Wire the ALU
         rf_to_alu_1_bus = ConnectorLine(
@@ -320,31 +323,70 @@ class Cod6Fig417(Scene):
             manhatten=True,
         )
         self.add_object(rf_to_alu_1_bus)
-        self.play(Create(rf_to_alu_1_bus))
         sign_extend_alu1_bus = ConnectorLine(
             start_pin=sign_extend.get_output_by_index(0),
             end_pin=alu_1_mux.get_input_by_index(1),
             manhatten=True,
+            axis_shift=1 * GRID,
         )
         self.add_object(sign_extend_alu1_bus)
-        self.play(Create(sign_extend_alu1_bus))
+        control_alu_src_pin = control.get_output_by_label("ALUSrc")
+        if control_alu_src_pin is None:
+            raise ValueError("ALUSrc output pin not found")
+        alu_1_mux_sel_pin = alu_1_mux.get_input_by_label("sel")
+        if alu_1_mux_sel_pin is None:
+            raise ValueError("ALU1 Mux sel input pin not found")
+        alu_src_wire = ConnectorLine(
+            start_pin=control_alu_src_pin,
+            end_pin=alu_1_mux_sel_pin,
+            manhatten=True,
+            color=BLUE,
+            axis_shift=0 * GRID,
+        )
+        self.add_object(alu_src_wire)
+        self.play(
+            Create(regfile_read_data1_wire),
+            FadeIn(alu_1_mux),
+            Create(rf_to_alu_1_bus),
+            Create(sign_extend_alu1_bus),
+            Create(alu_src_wire),
+        )
         self.wait(1)
 
         # Add ALUControl
         self.dim_all()
-        alu_control = AluControl(color=BLUE)
+        alu_control = AluControl(color=BLUE, show_labels=False)
         self.add_object(alu_control)
-        self.play(Create(alu_control))
+        temp_left_text = Text("inst[5:0]", color=BLUE, font_size=18).next_to(
+            alu_control.get_input_by_index(0), LEFT
+        )
+        temp_bottom_text = Text("ALUOp", color=BLUE, font_size=18).next_to(
+            alu_control.get_input_by_index(1), DOWN
+        )
+        temp_right_text = Text("Decode", color=BLUE, font_size=18).next_to(
+            alu_control.get_output_by_index(0), RIGHT
+        )
+        self.play(
+            Create(alu_control),
+            FadeIn(temp_left_text),
+            FadeIn(temp_bottom_text),
+            FadeIn(temp_right_text),
+        )
         self.wait(1)
-        self.play(alu_control.animate.scale(0.5).next_to(alu, DOWN))
+        self.play(
+            alu_control.animate.scale(0.5).next_to(alu, DOWN).shift(LEFT * 0.5),
+            FadeOut(temp_left_text),
+            FadeOut(temp_bottom_text),
+            FadeOut(temp_right_text),
+        )
         self.wait(1)
         self.undim_all()
 
-        # Wire the ALUControl
+        # Wire the ALUControl - start with inst[5:0]
         alu_control_inst_pin = alu_control.get_input_by_label("inst[5:0]")
         if alu_control_inst_pin is None:
             raise ValueError("inst[5:0] input pin not found")
-        bottom_line = inst_sign_extend_bus.line[0].get_end() + DOWN * 3
+        bottom_line = inst_sign_extend_bus.line[0].get_end() + DOWN * 2.8
         inst_to_alu_control_bus = ArbitrarySegmentLine(
             imem_inst_pin.dot.get_center(),
             inst_sign_extend_bus.line[0].get_end(),
@@ -358,5 +400,37 @@ class Cod6Fig417(Scene):
             color=WHITE,
         )
         self.add_object(inst_to_alu_control_bus)
-        self.play(Create(inst_to_alu_control_bus))
+        control_aluop_pin = control.get_output_by_label("ALUOp")
+        if control_aluop_pin is None:
+            raise ValueError("ControlUnit.ALUOp output pin not found")
+        alu_control_aluop_pin = alu_control.get_input_by_label("ALUOp")
+        if alu_control_aluop_pin is None:
+            raise ValueError("ALUControl.ALUOp input pin not found")
+        alu_control_decode_pin = alu_control.get_output_by_label("decode")
+        if alu_control_decode_pin is None:
+            raise ValueError("ALUControl.decode output pin not found")
+        control_aluop_to_alu_control_bus = ConnectorLine(
+            start_pin=control_aluop_pin,
+            end_pin=alu_control_aluop_pin,
+            manhatten=True,
+            axis_shift=2 * GRID,
+            color=BLUE,
+        )
+        self.add_object(control_aluop_to_alu_control_bus)
+        alu_control_to_alu_bottom_bus = ArbitrarySegmentLine(
+            alu_control_decode_pin.dot.get_center(),
+            (
+                alu.get_bottom_coordinate()[0],
+                alu_control_decode_pin.dot.get_center()[1],
+                0,
+            ),
+            alu.get_bottom_coordinate(),
+            color=BLUE,
+        )
+        self.add_object(alu_control_to_alu_bottom_bus)
+        self.play(
+            Create(inst_to_alu_control_bus),
+            Create(control_aluop_to_alu_control_bus),
+            Create(alu_control_to_alu_bottom_bus),
+        )
         self.wait(1)

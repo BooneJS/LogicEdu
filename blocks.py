@@ -112,6 +112,9 @@ class ALUZ(VGroupLogicObjectBase):
     def get_zero_connection(self) -> Pin:
         return self.zero_pin
 
+    def get_bottom_coordinate(self) -> np.ndarray:
+        return (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
+
     def dim_all(self):
         super().dim_all()
         self.shape.set_stroke(opacity=self.dim_value)
@@ -464,18 +467,6 @@ class GenEllipse(VGroupLogicObjectBase):
                 pin_y_down_distance += pin_gap
                 pin_x_over_distance += pin_gap
 
-    def get_input_by_label(self, label: str) -> Pin:
-        for pin in self._get_input_pins():
-            if pin.label.text == label:
-                return pin
-        raise ValueError(f"No input pin found with label '{label}'")
-
-    def get_output_by_label(self, label: str) -> Pin:
-        for pin in self._get_output_pins():
-            if pin.label.text == label:
-                return pin
-        raise ValueError(f"No output pin found with label '{label}'")
-
     @staticmethod
     def ellipse_x_intercepts(height, width, y) -> float:
         """Calculates pin.end given y for an ellipse."""
@@ -632,10 +623,12 @@ class AluControl(GenEllipse):
         label_text = "  ALU\nControl"
         ellipse_height = kwargs.pop("ellipse_height", 2)
         ellipse_width = kwargs.pop("ellipse_width", 1.2)
+        show_labels = kwargs.pop("show_labels", False)
+        pin_length = 1.0 if show_labels else 0.3
         pin_kwargs = {
-            "show_label": True,
+            "show_label": show_labels,
             "inner_label": False,
-            "pin_length": 1.0,
+            "pin_length": pin_length,
         }
         pins_info = [
             {
@@ -733,20 +726,6 @@ class GenRectangle(VGroupLogicObjectBase):
                 pin.shift(DOWN * (self.rectangle_height / 2))
             self.pins.append(pin)
             self.add(pin)
-
-    def get_input_by_label(self, label):
-        for pin in self._get_input_pins():
-            if getattr(pin, "label_str", None) == label:
-                return pin
-        print(f"No input pin found with label '{label}': {self._get_input_pins()}")
-        return None
-
-    def get_output_by_label(self, label):
-        for pin in self._get_output_pins():
-            if getattr(pin, "label_str", None) == label:
-                return pin
-        print(f"No output pin found with label '{label}': {self._get_output_pins()}")
-        return None
 
     def dim_all(self):
         super().dim_all()

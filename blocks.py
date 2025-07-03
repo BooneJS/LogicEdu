@@ -242,12 +242,14 @@ class Mux(VGroupLogicObjectBase):
                     font_size=14,
                     pin_length=self.pin_length,
                     pin_type=PinType.INPUT,
+                    label=f"{i}",
+                    show_label=True,
                 ).shift(UP * step * (self.num_inputs - i))
             )
-            label = Text(f"{i}", font_size=14, color=WHITE).next_to(
-                self.pins[i], RIGHT * step
-            )
-            self.add(label)
+            # label = Text(f"{i}", font_size=14, color=WHITE).next_to(
+            #     self.pins[i], RIGHT * step
+            # )
+            # self.add(label)
         self.pins.append(
             Pin(
                 pin_side=PinSide.RIGHT,
@@ -499,8 +501,8 @@ class SignExtend(GenEllipse):
 
     def __init__(self, **kwargs):
         label_text = " Sign-\nExtend"
-        ellipse_height = kwargs.pop("ellipse_height", 2)
-        ellipse_width = kwargs.pop("ellipse_width", 1.2)
+        ellipse_height = kwargs.pop("ellipse_height", 1.3)
+        ellipse_width = kwargs.pop("ellipse_width", 0.8)
         pins_info = [
             {
                 "pin_side": PinSide.LEFT,
@@ -560,14 +562,6 @@ class ControlUnit(GenEllipse):
             },
             {
                 "pin_side": PinSide.RIGHT,
-                "label": "MemRead",
-                "bit_width": 1,
-                "pin_length": output_pin_length,
-                "pin_type": PinType.OUTPUT,
-                **pin_kwargs,
-            },
-            {
-                "pin_side": PinSide.RIGHT,
                 "label": "MemtoReg",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
@@ -576,7 +570,7 @@ class ControlUnit(GenEllipse):
             },
             {
                 "pin_side": PinSide.RIGHT,
-                "label": "ALUOp",
+                "label": "MemWrite",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
                 "pin_type": PinType.OUTPUT,
@@ -584,7 +578,15 @@ class ControlUnit(GenEllipse):
             },
             {
                 "pin_side": PinSide.RIGHT,
-                "label": "MemWrite",
+                "label": "MemRead",
+                "bit_width": 1,
+                "pin_length": output_pin_length,
+                "pin_type": PinType.OUTPUT,
+                **pin_kwargs,
+            },
+            {
+                "pin_side": PinSide.RIGHT,
+                "label": "ALUOp",
                 "bit_width": 1,
                 "pin_length": output_pin_length,
                 "pin_type": PinType.OUTPUT,
@@ -805,7 +807,7 @@ class InstructionMemory(GenRectangle):
 
 
 class DataMemory(GenRectangle):
-    """Creates an Data Memory block."""
+    """Creates a Data Memory block."""
 
     def __init__(self, **kwargs):
         pins_info = [
@@ -827,6 +829,15 @@ class DataMemory(GenRectangle):
                 "pin_side": PinSide.TOP,
                 "pin_type": PinType.INPUT,
                 "label": "MemWrite",
+                "bit_width": 1,
+                "show_label": True,
+                "inner_label": False,
+                "pin_length": 1.1,
+            },
+            {
+                "pin_side": PinSide.BOTTOM,
+                "pin_type": PinType.INPUT,
+                "label": "MemRead",
                 "bit_width": 1,
                 "show_label": True,
                 "inner_label": False,

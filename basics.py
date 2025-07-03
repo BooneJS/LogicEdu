@@ -125,13 +125,13 @@ class Pin(VGroupLogicBase):
             if self.inner_label:
                 match self.pin_side:
                     case PinSide.LEFT:
-                        self.label.next_to(self.line, RIGHT * 0.5)
+                        self.label.next_to(self.line, RIGHT * 0.5, buff=0.1)
                     case PinSide.RIGHT:
-                        self.label.next_to(self.line, LEFT * 0.5)
+                        self.label.next_to(self.line, LEFT * 0.5, buff=0.1)
                     case PinSide.TOP:
-                        self.label.next_to(self.line, DOWN * 0.5)
+                        self.label.next_to(self.line, DOWN * 0.5, buff=0.1)
                     case PinSide.BOTTOM:
-                        self.label.next_to(self.line, UP * 0.5)
+                        self.label.next_to(self.line, UP * 0.5, buff=0.1)
             else:
                 match self.pin_side:
                     case PinSide.LEFT:
@@ -254,6 +254,7 @@ class ConnectorLine(VGroupLogicBase):
         manhatten: bool = kwargs.pop("manhatten", False)
         axis_shift: float = kwargs.pop("axis_shift", 0)
         verbose: bool = kwargs.pop("verbose", False)
+        mid_axis: float = kwargs.pop("mid_axis", None)
         # First segment direction defaults to X-axis.
         first_segment_dir: ConnectorFirstSegmentDir = kwargs.pop(
             "first_segment_dir", ConnectorFirstSegmentDir.X_AXIS
@@ -267,23 +268,23 @@ class ConnectorLine(VGroupLogicBase):
             axis_to_index = (
                 0 if first_segment_dir == ConnectorFirstSegmentDir.X_AXIS else 1
             )
-            mid_axis = 0
-            # if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-            #     mid_axis = start_pin.line.get_end()[axis_to_index]
-            # elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
-            #     mid_axis = end_pin.line.get_end()[axis_to_index]
-            # else:
-            mid_axis = (
-                np.round(
-                    (
-                        start_pin.line.get_end()[axis_to_index]
-                        + end_pin.line.get_end()[axis_to_index]
+            if mid_axis is None:
+                # if start_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+                #     mid_axis = start_pin.line.get_end()[axis_to_index]
+                # elif end_pin.pin_side in [PinSide.TOP, PinSide.BOTTOM]:
+                #     mid_axis = end_pin.line.get_end()[axis_to_index]
+                # else:
+                mid_axis = (
+                    np.round(
+                        (
+                            start_pin.line.get_end()[axis_to_index]
+                            + end_pin.line.get_end()[axis_to_index]
+                        )
+                        / 2,
+                        1,
                     )
-                    / 2,
-                    1,
+                    + axis_shift
                 )
-                + axis_shift
-            )
 
             mid_segment_start = 0
             mid_segment_end = 0

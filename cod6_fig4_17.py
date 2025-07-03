@@ -9,6 +9,7 @@ from manim import (
     LEFT,
     RIGHT,
     Text,
+    Dot,
 )
 from blocks import (
     AluControl,
@@ -16,6 +17,7 @@ from blocks import (
     PC,
     AdderPlus4,
     InstructionMemory,
+    DataMemory,
     ControlUnit,
     RegisterFile,
     Mux,
@@ -328,7 +330,7 @@ class Cod6Fig417(Scene):
             start_pin=sign_extend.get_output_by_index(0),
             end_pin=alu_1_mux.get_input_by_index(1),
             manhatten=True,
-            axis_shift=2.8 * GRID,
+            axis_shift=3 * GRID,
         )
         self.add_object(sign_extend_alu1_bus)
         control_alu_src_pin = control.get_output_by_label("ALUSrc")
@@ -434,4 +436,145 @@ class Cod6Fig417(Scene):
             Create(control_aluop_to_alu_control_bus),
             Create(alu_control_to_alu_bottom_bus),
         )
+        self.wait(1)
+
+        # Introduce Data Memory
+        self.dim_all()
+        dmem = DataMemory(color=WHITE)
+        self.add_object(dmem)
+        self.play(Create(dmem))
+        self.wait(1)
+
+        dmem_addr_pin = dmem.get_input_by_label("Addr")
+        if dmem_addr_pin is None:
+            raise ValueError("Addr input pin not found")
+        dmem_readdata_pin = dmem.get_output_by_label("ReadData")
+        if dmem_readdata_pin is None:
+            raise ValueError("ReadData output pin not found")
+        alu_result_pin = alu.get_result_connection()
+        dmem_scale = 0.6
+        self.wait(1)
+        self.play(
+            dmem.animate.scale(
+                dmem_scale, about_point=dmem_addr_pin.dot.get_center()
+            ).shift(
+                alu_result_pin.dot.get_center()
+                - dmem_addr_pin.dot.get_center()
+                + RIGHT * 0.5
+            ),
+        )
+        self.undim_all()
+        self.wait(1)
+        # Route wires/busses and add writeback mux
+        wbmux = Mux(pin_length=0.3, color=WHITE).scale(0.6).flip(RIGHT)
+        wbmux.shift(
+            dmem_readdata_pin.dot.get_center()
+            - wbmux.get_input_by_index(1).dot.get_center()
+        )
+        alu_result_to_dmem_addr_bus = ConnectorLine(
+            start_pin=alu_result_pin,
+            end_pin=dmem_addr_pin,
+            manhatten=False,
+        )
+        self.add_object(alu_result_to_dmem_addr_bus)
+
+        control_memtoreg_pin = control.get_output_by_label("MemtoReg")
+        if control_memtoreg_pin is None:
+            raise ValueError("MemtoReg output pin not found")
+        wbmux_memtoreg_pin = wbmux.get_input_by_label("sel")
+        if wbmux_memtoreg_pin is None:
+            raise ValueError("wbmux sel input pin not found")
+        control_memtoreg_to_wbmux_bus = ConnectorLine(
+            start_pin=control_memtoreg_pin,
+            end_pin=wbmux_memtoreg_pin,
+            manhatten=True,
+            mid_axis=wbmux_memtoreg_pin.dot.get_center()[0],
+            color=BLUE,
+        )
+        self.add_object(control_memtoreg_to_wbmux_bus)
+        # ReadData2 to DMEM.WriteData
+        dmem_write_data_pin = dmem.get_input_by_label("WriteData")
+        if dmem_write_data_pin is None:
+            raise ValueError("WriteData input pin not found")
+        bottom_line_start = rf_to_alu_1_bus.line[1].get_end() + DOWN * 0.6
+        regfile_read_data2_to_dmem_write_data_bus = ArbitrarySegmentLine(
+            rf_to_alu_1_bus.line[1].get_end(),
+            bottom_line_start,
+            (
+                dmem_write_data_pin.dot.get_center()[0],
+                bottom_line_start[1],
+                0,
+            ),
+            dmem_write_data_pin.dot.get_center(),
+            color=WHITE,
+        )
+        self.add_object(regfile_read_data2_to_dmem_write_data_bus)
+
+        control_memwrite_pin = control.get_output_by_label("MemWrite")
+        if control_memwrite_pin is None:
+            raise ValueError("MemWrite output pin not found")
+        dmem_memwrite_pin = dmem.get_input_by_label("MemWrite")
+        if dmem_memwrite_pin is None:
+            raise ValueError("MemWrite input pin not found")
+        control_memwrite_to_dmem_bus = ConnectorLine(
+            start_pin=control_memwrite_pin,
+            end_pin=dmem_memwrite_pin,
+            manhatten=True,
+            color=BLUE,
+            mid_axis=dmem_memwrite_pin.dot.get_center()[0],
+        )
+        self.add_object(control_memwrite_to_dmem_bus)
+        control_memread_pin = control.get_output_by_label("MemRead")
+        if control_memread_pin is None:
+            raise ValueError("MemRead output pin not found")
+        dmem_memread_pin = dmem.get_input_by_label("MemRead")
+        if dmem_memread_pin is None:
+            raise ValueError("MemRead input pin not found")
+        control_memread_to_dmem_bus = ConnectorLine(
+            start_pin=control_memread_pin,
+            end_pin=dmem_memread_pin,
+            manhatten=True,
+            axis_shift=12 * GRID,
+            color=BLUE,
+        )
+        self.add_object(control_memread_to_dmem_bus)
+        bottom_line_start = alu_result_pin.dot.get_center() + DOWN * 1.7
+        alu_result_to_wbmux0_bus = ArbitrarySegmentLine(
+            alu_result_pin.dot.get_center(),
+            bottom_line_start,
+            (
+                wbmux.get_input_by_index(0).dot.get_center()[0],
+                bottom_line_start[1],
+                0,
+            ),
+            wbmux.get_input_by_index(0).dot.get_center(),
+            color=WHITE,
+        )
+        self.add_object(alu_result_to_wbmux0_bus)
+        regfile_write_data_pin = regfile.get_input_by_label("WriteData")
+        if regfile_write_data_pin is None:
+            raise ValueError("WriteData input pin not found")
+        bottom_line_start = wbmux.get_output_by_index(0).dot.get_center() + DOWN * 2.5
+        writeback_data_bus = ArbitrarySegmentLine(
+            wbmux.get_output_by_index(0).dot.get_center(),
+            bottom_line_start,
+            (
+                regfile_write_data_pin.dot.get_center()[0],
+                bottom_line_start[1],
+                0,
+            ),
+            regfile_write_data_pin.dot.get_center(),
+            color=WHITE,
+        )
+        self.add_object(writeback_data_bus)
+        self.play(
+            FadeIn(wbmux),
+            Create(alu_result_to_dmem_addr_bus),
+            Create(control_memtoreg_to_wbmux_bus),
+            Create(control_memwrite_to_dmem_bus),
+            Create(control_memread_to_dmem_bus),
+            Create(alu_result_to_wbmux0_bus),
+            Create(regfile_read_data2_to_dmem_write_data_bus),
+        )
+        self.play(Create(writeback_data_bus))
         self.wait(1)

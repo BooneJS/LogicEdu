@@ -294,7 +294,7 @@ class Cod6Fig417(Scene):
         )
         self.play(
             alu.animate.scale(alu_scale).shift(
-                RIGHT * 0.5 + DOWN * align_with_regfile_readdata1
+                RIGHT * 0.7 + DOWN * align_with_regfile_readdata1
             )
         )
         self.undim_all()
@@ -312,6 +312,7 @@ class Cod6Fig417(Scene):
         alu_1_mux_shift = (
             alu_1_pin.dot.get_center()
             - alu_1_mux.get_output_by_index(0).dot.get_center()
+            + RIGHT * 0.2
         )
         alu_1_mux.shift(alu_1_mux_shift)
         self.add_object(alu_1_mux)
@@ -327,7 +328,7 @@ class Cod6Fig417(Scene):
             start_pin=sign_extend.get_output_by_index(0),
             end_pin=alu_1_mux.get_input_by_index(1),
             manhatten=True,
-            axis_shift=1 * GRID,
+            axis_shift=2.8 * GRID,
         )
         self.add_object(sign_extend_alu1_bus)
         control_alu_src_pin = control.get_output_by_label("ALUSrc")

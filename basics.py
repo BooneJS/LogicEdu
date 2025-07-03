@@ -239,6 +239,7 @@ class ConnectorLine(VGroupLogicBase):
 
         manhatten: bool = kwargs.pop("manhatten", False)
         axis_shift: float = kwargs.pop("axis_shift", 0)
+        verbose: bool = kwargs.pop("verbose", False)
         # First segment direction defaults to X-axis.
         first_segment_dir: ConnectorFirstSegmentDir = kwargs.pop(
             "first_segment_dir", ConnectorFirstSegmentDir.X_AXIS
@@ -282,6 +283,14 @@ class ConnectorLine(VGroupLogicBase):
                 mid_segment_start = ORIGIN + [start_pin.line.get_end()[0], mid_axis, 0]
                 # Y-axis of midpoint, X-axis of end_pin.
                 mid_segment_end = ORIGIN + [end_pin.line.get_end()[0], mid_axis, 0]
+
+            if verbose:
+                print(f"first_segment_dir: {first_segment_dir}")
+                print(f"mid_axis: {mid_axis}")
+                print(f"mid_segment_start: {mid_segment_start}")
+                print(f"mid_segment_end: {mid_segment_end}")
+                print(f"start_pin.line.get_end(): {start_pin.line.get_end()}")
+                print(f"end_pin.line.get_end(): {end_pin.line.get_end()}")
 
             self.line = VGroup(
                 Line(start_pin.line.get_end(), mid_segment_start, **kwargs),

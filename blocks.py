@@ -3,8 +3,8 @@ from manim import (
     Ellipse,
     Polygon,
     Rectangle,
-    VGroup,
     Text,
+    Dot,
     WHITE,
     BLUE,
     LEFT,
@@ -16,7 +16,15 @@ from manim import (
 )
 import numpy as np
 from typing import List
-from basics import Pin, PinSide, PinType, VGroupLogicBase, VGroupLogicObjectBase
+from basics import (
+    Pin,
+    PinSide,
+    PinType,
+    VGroupLogicObjectBase,
+    ConnectorLine,
+    ArbitrarySegmentLine,
+)
+from logic_gates import AND2
 import math
 
 
@@ -218,10 +226,18 @@ class AdderPlus4(Adder):
         self.plus4_text.set_opacity(1)
 
 
+class MuxSelLocation(enum.Enum):
+    """Location of the select pin for a Mux."""
+
+    TOP = "top"
+    BOTTOM = "bottom"
+
+
 class Mux(VGroupLogicObjectBase):
     """Creates a Mux block."""
 
     def __init__(self, **kwargs):
+        self.sel_location = kwargs.pop("sel_location", MuxSelLocation.BOTTOM)
         self.num_inputs = kwargs.pop("num_inputs", 2)
         self.pin_length = kwargs.pop("pin_length", 0.5)
         super().__init__(**kwargs)
@@ -246,10 +262,6 @@ class Mux(VGroupLogicObjectBase):
                     show_label=True,
                 ).shift(UP * step * (self.num_inputs - i))
             )
-            # label = Text(f"{i}", font_size=14, color=WHITE).next_to(
-            #     self.pins[i], RIGHT * step
-            # )
-            # self.add(label)
         self.pins.append(
             Pin(
                 pin_side=PinSide.RIGHT,
@@ -258,10 +270,15 @@ class Mux(VGroupLogicObjectBase):
                 pin_type=PinType.OUTPUT,
             ).shift(UP * (height / 2) + RIGHT * step)
         )
+        pin_side = PinSide.BOTTOM
         start = (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
+        if self.sel_location == MuxSelLocation.TOP:
+            pin_side = PinSide.TOP
+            start = (self.shape.get_vertices()[2] + self.shape.get_vertices()[3]) / 2
+
         self.pins.append(
             Pin(
-                pin_side=PinSide.BOTTOM,
+                pin_side=pin_side,
                 label="sel",
                 pin_length=self.pin_length,
                 pin_type=PinType.INPUT,
@@ -373,7 +390,7 @@ class GenEllipse(VGroupLogicObjectBase):
 
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
-        self.label_text = kwargs.pop("label_text", "GenEllipse")
+        self.label_text = kwargs.pop("label", "GenEllipse")
         ellipse_height = kwargs.pop("height", 2)
         ellipse_width = kwargs.pop("width", 1)
         pins_info = kwargs.pop(
@@ -519,7 +536,7 @@ class SignExtend(GenEllipse):
                 "pin_type": PinType.OUTPUT,
             },
         ]
-        super().__init__(label_text=label_text, pins_info=pins_info, **kwargs)
+        super().__init__(label=label_text, pins_info=pins_info, **kwargs)
 
 
 class ControlUnit(GenEllipse):
@@ -610,7 +627,7 @@ class ControlUnit(GenEllipse):
             },
         ]
         super().__init__(
-            label_text=label_text,
+            label=label_text,
             pins_info=pins_info,
             height=ellipse_height,
             width=ellipse_width,
@@ -655,7 +672,7 @@ class AluControl(GenEllipse):
                 **pin_kwargs,
             },
         ]
-        super().__init__(label_text=label_text, pins_info=pins_info, **kwargs)
+        super().__init__(label=label_text, pins_info=pins_info, **kwargs)
 
 
 class ShiftLeft(GenEllipse):
@@ -950,3 +967,104 @@ class RegisterFile(GenRectangle):
             UP * ((self.rectangle_height / 2) - rhs_offset)
         )
         self.label.shift(DOWN * (self.rectangle_height / 2 - 0.2) + RIGHT * 0.2)
+
+
+class BranchLogic(VGroupLogicObjectBase):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.branch_adder = Adder(color=WHITE).scale(0.6)
+        self.branch_adder.shift(DOWN * self.branch_adder.get_height() / 2)
+        self.shiftleft2 = ShiftLeft(color=WHITE, amount=2)
+        self.shiftleft2.shift(
+            self.branch_adder.get_input1_connection().dot.get_center()
+            - self.shiftleft2.get_output_by_index(0).dot.get_center()
+        )
+
+        self.mux2 = Mux(color=WHITE).scale(1.5)
+        self.mux2.shift(
+            self.branch_adder.get_result_connection().dot.get_center()
+            - self.mux2.get_input_by_index(1).dot.get_center()
+        )
+
+        self.and2 = AND2(color=BLUE).next_to(self.mux2, DOWN)
+        self.and2.shift(
+            0.8 * DOWN
+            + (
+                self.mux2.get_input_by_index(2).dot.get_center()
+                - self.and2.get_output_connection().dot.get_center()
+            )
+        )
+        self.mux_sel_wire = ConnectorLine(
+            start_pin=self.mux2.get_input_by_index(2),
+            end_pin=self.and2.get_output_connection(),
+            manhatten=False,
+            color=BLUE,
+        )
+        pcplus4_upper_line_start = (
+            self.branch_adder.get_input0_connection().dot.get_center() + 0.6 * UP
+        )
+        self.pcplus4_bus = ArbitrarySegmentLine(
+            self.branch_adder.get_input0_connection().dot.get_center(),
+            pcplus4_upper_line_start,
+            (
+                self.mux2.get_input_by_index(0).dot.get_center()[0],
+                pcplus4_upper_line_start[1],
+                0,
+            ),
+            self.mux2.get_input_by_index(0).dot.get_center(),
+        )
+        self.pcplus4_pin = Pin(
+            pin_side=PinSide.LEFT,
+            pin_length=0.5,
+            pin_type=PinType.INPUT,
+            label="pcplus4",
+            bit_width=32,
+        ).shift(self.pcplus4_bus.get_vertices()[0])
+
+        self.add(
+            self.branch_adder,
+            self.shiftleft2,
+            self.mux2,
+            self.and2,
+            self.mux_sel_wire,
+            self.pcplus4_bus,
+            self.pcplus4_pin,
+        )
+
+    def get_input_by_label(self, label) -> Pin:
+        match label:
+            case "pcplus4":
+                return self.pcplus4_pin
+            case "imm":
+                return self.shiftleft2.get_input_by_index(0)
+            case "branch":
+                return self.and2.get_input0_connection()
+            case "zero":
+                return self.and2.get_input1_connection()
+            case _:
+                raise ValueError(f"Input pin label not found: {label}")
+
+    def get_output_by_index(self, index) -> Pin:
+        if index != 0:
+            raise ValueError(f"Output pin index not found: {index}")
+        return self.mux2.get_output_by_index(0)
+
+    def dim_all(self):
+        super().dim_all()
+        self.branch_adder.dim_all()
+        self.shiftleft2.dim_all()
+        self.mux2.dim_all()
+        self.and2.dim_all()
+        self.mux_sel_wire.dim_all()
+        self.pcplus4_bus.dim_all()
+        self.pcplus4_pin.dim_all()
+
+    def undim_all(self):
+        super().dim_all()
+        self.branch_adder.undim_all()
+        self.shiftleft2.undim_all()
+        self.mux2.undim_all()
+        self.and2.undim_all()
+        self.mux_sel_wire.undim_all()
+        self.pcplus4_bus.undim_all()
+        self.pcplus4_pin.undim_all()

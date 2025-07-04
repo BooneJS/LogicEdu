@@ -88,6 +88,7 @@ class ShapeFactory:
 
     @staticmethod
     def create_shape(logic_type: LogicType, **kwargs) -> ArcPolygon:
+        color = kwargs.pop("color", WHITE)
         match logic_type:
             case LogicType.AND | LogicType.NAND:
                 lower_arc_start = RIGHT * ShapeFactory.and_edge_len()
@@ -110,13 +111,13 @@ class ShapeFactory:
                     upper_arc_end,
                     LOGIC_UP,
                     arc_config=[
-                        {"angle": 0},
-                        {"angle": lower_angle},
-                        {"angle": upper_angle},
-                        {"angle": 0},
-                        {"angle": 0},
+                        {"angle": 0, "color": color},
+                        {"angle": lower_angle, "color": color},
+                        {"angle": upper_angle, "color": color},
+                        {"angle": 0, "color": color},
+                        {"angle": 0, "color": color},
                     ],
-                    color=WHITE,
+                    color=color,
                     **kwargs,
                 )
             case LogicType.OR | LogicType.NOR | LogicType.XOR | LogicType.XNOR:
@@ -135,13 +136,13 @@ class ShapeFactory:
                     LOGIC_UP + RIGHT * ShapeFactory.or_edge_len(),
                     LOGIC_UP + left_shift,
                     arc_config=[
-                        {"angle": 0},
-                        {"radius": ShapeFactory.or_radius()},
-                        {"radius": ShapeFactory.or_radius()},
-                        {"angle": 0},
-                        {"radius": -ShapeFactory.or_radius()},
+                        {"angle": 0, "color": color},
+                        {"radius": ShapeFactory.or_radius(), "color": color},
+                        {"radius": ShapeFactory.or_radius(), "color": color},
+                        {"angle": 0, "color": color},
+                        {"radius": -ShapeFactory.or_radius(), "color": color},
                     ],
-                    color=WHITE,
+                    color=color,
                     **kwargs,
                 )
             case LogicType.BUF | LogicType.INV:
@@ -155,11 +156,11 @@ class ShapeFactory:
                     buf_up + buf_right,
                     UP * ShapeFactory.buf_side_len(),
                     arc_config=[
-                        {"angle": 0},
-                        {"angle": 0},
-                        {"angle": 0},
+                        {"angle": 0, "color": color},
+                        {"angle": 0, "color": color},
+                        {"angle": 0, "color": color},
                     ],
-                    color=WHITE,
+                    color=color,
                     **kwargs,
                 )
 
@@ -175,15 +176,18 @@ class UnaryLogic(VGroupLogicBase):
         super().__init__(**kwargs)
         self.inputs: List[Pin] = []
         self.outputs: List[Pin] = []
+        color = kwargs.pop("color", WHITE)
 
-        self.shape = ShapeFactory.create_shape(LogicType.INV)
+        self.shape = ShapeFactory.create_shape(LogicType.INV, color=color, **kwargs)
         self.add(self.shape)
 
         self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(UP * self.get_height() / 2)
+            Pin(pin_side=PinSide.LEFT, color=color, **kwargs).shift(
+                UP * self.get_height() / 2
+            )
         )
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(
+            Pin(pin_side=PinSide.RIGHT, color=color, **kwargs).shift(
                 UP * self.get_height() / 2 + RIGHT * self.shape.get_width()
             )
         )
@@ -211,7 +215,7 @@ class UnaryLogic(VGroupLogicBase):
     def dim_all(self):
         self.shape.set_stroke(opacity=self.dim_value)
         for pin in self.inputs + self.outputs:
-            pin.set_opacity(0.1)
+            pin.set_opacity(self.dim_value)
 
     def undim_all(self):
         self.shape.set_stroke(opacity=1)
@@ -222,7 +226,8 @@ class UnaryLogic(VGroupLogicBase):
 class BinaryLogic(VGroupLogicBase):
     def __init__(self, logic_type: LogicType, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
-        super().__init__(**kwargs)
+        color = kwargs.pop("color", WHITE)
+        super().__init__(color=color, **kwargs)
         self.logic_type = logic_type
 
         pin_starts = List[Point3DLike]
@@ -238,25 +243,25 @@ class BinaryLogic(VGroupLogicBase):
         self.inputs: List[Pin] = []
         self.outputs: List[Pin] = []
 
-        self.shape = ShapeFactory.create_shape(self.logic_type)
+        self.shape = ShapeFactory.create_shape(self.logic_type, color=color, **kwargs)
         self.add(self.shape)
 
         # Create Input Pins for 2 or 3 input gates.
         # Input 0 measures down from the top of the gate.
         self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
+            Pin(pin_side=PinSide.LEFT, color=color).shift(
                 LOGIC_UP + DOWN * ShapeFactory.edge_to_pin()
             )
         )
         # If there's more than 2 inputs, add the second input to the middle
         if self.num_inputs > 2:
             self.inputs.append(
-                Pin(pin_side=PinSide.LEFT, color=WHITE).shift(LOGIC_UP / 2)
+                Pin(pin_side=PinSide.LEFT, color=color).shift(LOGIC_UP / 2)
             )
 
         # The last input measures up from the bottom of the gate.
         self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=WHITE).shift(
+            Pin(pin_side=PinSide.LEFT, color=color).shift(
                 UP * ShapeFactory.edge_to_pin()
             )
         )
@@ -273,7 +278,7 @@ class BinaryLogic(VGroupLogicBase):
         )
 
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=WHITE).shift(self.shape.arcs[1].get_end())
+            Pin(pin_side=PinSide.RIGHT, color=color).shift(self.shape.arcs[1].get_end())
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
@@ -325,6 +330,16 @@ class BinaryLogic(VGroupLogicBase):
 
     def get_output_count(self):
         return len(self.outputs)
+
+    def dim_all(self):
+        self.shape.set_stroke(opacity=self.dim_value)
+        for pin in self.inputs + self.outputs:
+            pin.set_opacity(self.dim_value)
+
+    def undim_all(self):
+        self.shape.set_stroke(opacity=1)
+        for pin in self.inputs + self.outputs:
+            pin.set_opacity(1)
 
 
 class AND2(BinaryLogic):

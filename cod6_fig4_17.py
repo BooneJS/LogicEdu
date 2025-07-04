@@ -9,12 +9,13 @@ from manim import (
     LEFT,
     RIGHT,
     Text,
-    Dot,
+    LaggedStart,
 )
 from blocks import (
     AluControl,
     ALUZ,
     PC,
+    BranchLogic,
     AdderPlus4,
     InstructionMemory,
     DataMemory,
@@ -46,8 +47,8 @@ class Cod6Fig417(Scene):
         self.wait(1)
 
     def construct(self):
-        grid = create_grid()
-        self.play(FadeIn(grid))
+        # grid = create_grid()
+        # self.play(FadeIn(grid))
 
         # Introduce PC
         pc_block = PC(color=WHITE)
@@ -106,7 +107,7 @@ class Cod6Fig417(Scene):
         self.add_object(control)
         self.play(Create(control))
         self.wait(1)
-        self.play(control.animate.scale(0.6).shift(LEFT * 2.7 + UP * 1.5))
+        self.play(control.animate.scale(0.6).shift(LEFT * 2.7 + UP * 1.2))
         self.undim_all()
         self.wait(1)
         imem_inst_pin = imem.get_output_by_label("Inst")
@@ -377,10 +378,10 @@ class Cod6Fig417(Scene):
         )
         self.wait(1)
         self.play(
-            alu_control.animate.scale(0.5).next_to(alu, DOWN).shift(LEFT * 0.5),
             FadeOut(temp_left_text),
             FadeOut(temp_bottom_text),
             FadeOut(temp_right_text),
+            alu_control.animate.scale(0.5).next_to(alu, DOWN).shift(LEFT * 0.5),
         )
         self.wait(1)
         self.undim_all()
@@ -432,9 +433,12 @@ class Cod6Fig417(Scene):
         )
         self.add_object(alu_control_to_alu_bottom_bus)
         self.play(
-            Create(inst_to_alu_control_bus),
-            Create(control_aluop_to_alu_control_bus),
-            Create(alu_control_to_alu_bottom_bus),
+            LaggedStart(
+                Create(inst_to_alu_control_bus),
+                Create(control_aluop_to_alu_control_bus),
+                Create(alu_control_to_alu_bottom_bus),
+                lag_ratio=0.5,
+            )
         )
         self.wait(1)
 
@@ -471,6 +475,7 @@ class Cod6Fig417(Scene):
             dmem_readdata_pin.dot.get_center()
             - wbmux.get_input_by_index(1).dot.get_center()
         )
+        self.add_object(wbmux)
         alu_result_to_dmem_addr_bus = ConnectorLine(
             start_pin=alu_result_pin,
             end_pin=dmem_addr_pin,
@@ -568,13 +573,109 @@ class Cod6Fig417(Scene):
         )
         self.add_object(writeback_data_bus)
         self.play(
-            FadeIn(wbmux),
-            Create(alu_result_to_dmem_addr_bus),
-            Create(control_memtoreg_to_wbmux_bus),
-            Create(control_memwrite_to_dmem_bus),
-            Create(control_memread_to_dmem_bus),
-            Create(alu_result_to_wbmux0_bus),
-            Create(regfile_read_data2_to_dmem_write_data_bus),
+            LaggedStart(
+                FadeIn(wbmux),
+                Create(alu_result_to_dmem_addr_bus),
+                Create(control_memtoreg_to_wbmux_bus),
+                Create(control_memwrite_to_dmem_bus),
+                Create(control_memread_to_dmem_bus),
+                Create(alu_result_to_wbmux0_bus),
+                Create(regfile_read_data2_to_dmem_write_data_bus),
+                lag_ratio=0.5,
+            )
         )
         self.play(Create(writeback_data_bus))
+        self.wait(1)
+
+        # Add Branch Logic
+        self.dim_all()
+        branch_logic = BranchLogic(color=WHITE)
+        self.add_object(branch_logic)
+        self.add_object(branch_logic)
+        shift_branch_logic = RIGHT * 1.3 + UP * 2.2
+        self.play(
+            Create(branch_logic),
+        )
+        self.wait(1)
+        self.play(branch_logic.animate.scale(0.6).shift(shift_branch_logic))
+        self.wait(1)
+        self.undim_all()
+
+        # Wire the Branch Logic
+        pcplus4_pin = adder_plus4.get_result_connection()
+        branch_logic_pcplus4_pin = branch_logic.get_input_by_label("pcplus4")
+        if branch_logic_pcplus4_pin is None:
+            raise ValueError("BranchLogic.pcplus4 input pin not found")
+        pcplus4_to_branch_logic_bus = ConnectorLine(
+            start_pin=pcplus4_pin,
+            end_pin=branch_logic_pcplus4_pin,
+            manhatten=True,
+        )
+        self.add_object(pcplus4_to_branch_logic_bus)
+
+        branch_logic_imm_pin = branch_logic.get_input_by_label("imm")
+        if branch_logic_imm_pin is None:
+            raise ValueError("BranchLogic.imm input pin not found")
+        sign_extend_to_branch_logic_bus = ConnectorLine(
+            start_pin=sign_extend.get_output_by_index(0),
+            end_pin=branch_logic_imm_pin,
+            manhatten=True,
+        )
+        self.add_object(sign_extend_to_branch_logic_bus)
+
+        control_branch_pin = control.get_output_by_label("Branch")
+        if control_branch_pin is None:
+            raise ValueError("ControlUnit.Branch output pin not found")
+        branch_logic_branch_pin = branch_logic.get_input_by_label("branch")
+        if branch_logic_branch_pin is None:
+            raise ValueError("BranchLogic.branch input pin not found")
+        control_branch_to_branch_logic_bus = ConnectorLine(
+            start_pin=control_branch_pin,
+            end_pin=branch_logic_branch_pin,
+            manhatten=True,
+            color=BLUE,
+            axis_shift=15 * GRID,
+        )
+        self.add_object(control_branch_to_branch_logic_bus)
+
+        alu_zero_pin = alu.get_zero_connection()
+        branch_logic_zero_pin = branch_logic.get_input_by_label("zero")
+        if branch_logic_zero_pin is None:
+            raise ValueError("BranchLogic.zero input pin not found")
+        alu_zero_to_branch_logic_bus = ConnectorLine(
+            start_pin=alu_zero_pin,
+            end_pin=branch_logic_zero_pin,
+            manhatten=True,
+            color=BLUE,
+        )
+        self.add_object(alu_zero_to_branch_logic_bus)
+
+        next_pc_bus_upper_line = (
+            branch_logic.get_output_by_index(0).dot.get_center() + UP * 0.8
+        )
+        pc_input_pin = pc_block.get_input_by_index(0)
+        next_pc_bus = ArbitrarySegmentLine(
+            branch_logic.get_output_by_index(0).dot.get_center(),
+            next_pc_bus_upper_line,
+            (
+                pc_input_pin.dot.get_center()[0],
+                next_pc_bus_upper_line[1],
+                0,
+            ),
+            pc_input_pin.dot.get_center(),
+            color=WHITE,
+        )
+        self.add_object(next_pc_bus)
+        self.play(
+            LaggedStart(
+                Create(pcplus4_to_branch_logic_bus),
+                Create(sign_extend_to_branch_logic_bus),
+                Create(control_branch_to_branch_logic_bus),
+                Create(alu_zero_to_branch_logic_bus),
+                Create(next_pc_bus),
+                lag_ratio=0.3,
+            )
+        )
+        self.wait(1)
+        self.undim_all()
         self.wait(1)

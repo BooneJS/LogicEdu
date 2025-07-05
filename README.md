@@ -16,11 +16,19 @@ ManimLogic provides building blocks for creating educational animations of digit
 
 ## Installation from source
 
+Install `uv` as instructed by [Manim Community](https://docs.manim.community/en/stable/installation/uv.html#installing-manim-locally).
+
 ```bash
-git clone https://github.com/BooneJS/manimlogic.git
-cd manimlogic
-pip install -e .
+git clone https://github.com/BooneJS/ManimLogic.git
+cd ManimLogic
+uv venv
+source .venv/bin/activate
+uv pip install -e .
 ```
+
+Try rendering the [examples/demo.py](examples/demo.py) Scene to check the installation.
+
+`manim -pqh manimlogic/examples/demo.py Demo`
 
 ## Quick Start
 

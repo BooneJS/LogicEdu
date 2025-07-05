@@ -1095,7 +1095,7 @@ class BranchLogic(VGroupLogicObjectBase):
         self.pcplus4_pin.dim_all()
 
     def undim_all(self):
-        super().dim_all()
+        super().undim_all()
         self.branch_adder.undim_all()
         self.shiftleft2.undim_all()
         self.mux2.undim_all()

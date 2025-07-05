@@ -1,10 +1,10 @@
-# ManimLogic
+# LogicEdu
 
 A Python library for creating digital logic circuit animations using [Manim](https://www.manim.community).
 
 ## Overview
 
-ManimLogic provides building blocks for creating educational animations of digital logic circuits, computer architecture diagrams, and data flow visualizations. It's built on top of [Manim](https://www.manim.community) and offers a set of components commonly found in digital logic and computer architecture.
+LogicEdu provides building blocks for creating educational animations of digital logic circuits, computer architecture diagrams, and data flow visualizations. It's built on top of [Manim](https://www.manim.community) and offers a set of components commonly found in digital logic and computer architecture.
 
 ## Features
 
@@ -19,8 +19,8 @@ ManimLogic provides building blocks for creating educational animations of digit
 Install `uv` as instructed by [Manim Community](https://docs.manim.community/en/stable/installation/uv.html#installing-manim-locally).
 
 ```bash
-git clone https://github.com/BooneJS/ManimLogic.git
-cd ManimLogic
+git clone https://github.com/BooneJS/logicedu.git
+cd logicedu
 uv venv
 source .venv/bin/activate
 uv pip install -e .
@@ -28,13 +28,13 @@ uv pip install -e .
 
 Try rendering the [examples/demo.py](examples/demo.py) Scene to check the installation.
 
-`manim -pqh manimlogic/examples/demo.py Demo`
+`manim -pqh logicedu/examples/demo.py Demo`
 
 ## Quick Start
 
 ```python
 from manim import Scene, Create
-from manimlogic import ALUZ, RegisterFile, ConnectorLine
+from logicedu import ALUZ, RegisterFile, ConnectorLine
 
 class MyCircuit(Scene):
     def construct(self):
@@ -60,8 +60,8 @@ class MyCircuit(Scene):
 
 ## Documentation
 
-- For additional documentation on ManimLogic, visit [docs/README.md](docs/README.md).
-- Since ManimLogic is a set of classes for common logical and architectural shapes on top of Manim, most documentation a user will want to review comes from [Manim Community Docs](https://docs.manim.community/en/stable/).
+- For additional documentation on LogicEdu, visit [docs/README.md](docs/README.md).
+- Since LogicEdu is a set of classes for common logical and architectural shapes on top of Manim, most documentation a user will want to review comes from [Manim Community Docs](https://docs.manim.community/en/stable/).
 
 ## Examples
 

@@ -1,5 +1,5 @@
 """
-Core components for ManimLogic.
+Core components for LogicEdu.
 
 This module contains the fundamental building blocks:
 - Pin system for component connections

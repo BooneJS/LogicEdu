@@ -1,5 +1,5 @@
 """
-Animation helper functions for ManimLogic.
+Animation helper functions for LogicEdu.
 
 This module provides utility functions for common animation patterns
 used in circuit construction and visualization.

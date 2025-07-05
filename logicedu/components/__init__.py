@@ -1,5 +1,5 @@
 """
-Component library for ManimLogic.
+Component library for LogicEdu.
 
 This module contains all the digital logic and computer architecture components:
 - Logic gates (AND, OR, NOT, etc.)

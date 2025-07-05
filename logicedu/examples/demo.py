@@ -13,7 +13,7 @@ from manim import (
     Create,
 )
 
-from manimlogic import (
+from logicedu import (
     ConnectorLine,
     GRID,
     create_grid,

@@ -1,12 +1,13 @@
 """
-ManimLogic - Digital Logic Circuit Animation Library for Manim
+LogicEdu - Digital Logic Circuit Animation Library for Manim
 
 A comprehensive library for creating educational animations of digital logic circuits,
 computer architecture diagrams, and data flow visualizations.
 """
 
 __version__ = "0.1.0"
-__author__ = "BooneJS"
+__author__ = "Boone Severson"
+__email__ = "boonejs@me.com"
 __email__ = "boonejs@me.com"
 
 # Core components

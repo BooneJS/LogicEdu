@@ -1,9 +1,9 @@
-# Development dependencies for ManimLogic
+# Development dependencies for LogicEdu
 # 
 # USAGE INSTRUCTIONS:
 # 
 # For End Users (just want to use the library):
-#   pip install manimlogic
+#   pip install logicedu
 # 
 # For Developers (want to contribute to the project):
 #   1. Clone the repository
@@ -14,13 +14,13 @@
 #   6. Run tests: uv pytest
 #   7. Format code: uv black .
 #   8. Check code quality: uv flake8
-#   9. Type checking: uv mypy manimlogic/
+#   9. Type checking: uv mypy logicedu/
 # 
 # For Contributors:
 #   - Write tests for new features in tests/
 #   - Ensure all tests pass: uv pytest
 #   - Format code before committing: uv black .
-#   - Check for issues: uv flake8 && uv mypy manimlogic/
+#   - Check for issues: uv flake8 && uv mypy logicedu/
 #   - Update documentation if adding new features
 
 # Testing

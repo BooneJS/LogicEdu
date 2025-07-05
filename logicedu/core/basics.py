@@ -63,7 +63,7 @@ class Pin(VGroupLogicBase):
     """
     A Pin represents a connection point on a digital logic component.
 
-    Pins are the fundamental building blocks for connecting components in ManimLogic.
+    Pins are the fundamental building blocks for connecting components in LogicEdu.
     Each pin consists of a Manim Line and Dot, and can optionally display labels,
     bus indicators for multi-bit connections, and inversion bubbles.
 

@@ -1,12 +1,12 @@
 """
-Basic circuit examples using ManimLogic.
+Basic circuit examples using LogicEdu.
 
 This example demonstrates how to create simple digital logic circuits
-using ManimLogic components.
+using LogicEdu components.
 """
 
 from manim import Scene, Create, FadeIn, VGroup
-from manimlogic import (
+from logicedu import (
     AND2,
     OR2,
     INV,

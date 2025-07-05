@@ -1,8 +1,8 @@
 """
-Tests for core ManimLogic components.
+Tests for core LogicEdu components.
 """
 
-from manimlogic.core import Pin, PinSide, PinType, ConnectorLine, create_grid, GRID
+from logicedu.core import Pin, PinSide, PinType, ConnectorLine, create_grid, GRID
 
 
 class TestPin:
@@ -43,7 +43,7 @@ class TestGrid:
 
     def test_grid_rounding(self):
         """Test grid rounding function."""
-        from manimlogic.core.basics import grid_round
+        from logicedu.core.basics import grid_round
 
         assert grid_round(1.234) == 1.2
         assert grid_round(0.567) == 0.6

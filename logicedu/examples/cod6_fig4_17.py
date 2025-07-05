@@ -11,7 +11,7 @@ from manim import (
     Text,
     LaggedStart,
 )
-from manimlogic import (
+from logicedu import (
     AluControl,
     ALUZ,
     PC,

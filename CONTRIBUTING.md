@@ -1,11 +1,11 @@
-# Contributing to ManimLogic
+# Contributing to LogicEdu
 
-Thank you for your interest in contributing to ManimLogic! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to LogicEdu! This document provides guidelines and information for contributors.
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/manimlogic.git`
+2. Clone your fork: `git clone https://github.com/yourusername/logicedu.git`
 3. Create a virtual environment: `python -m venv venv`
 4. Activate the virtual environment:
    - Windows: `venv\Scripts\activate`
@@ -33,13 +33,13 @@ Thank you for your interest in contributing to ManimLogic! This document provide
 ## Adding New Components
 
 ### Logic Gates
-1. Add the gate type to `LogicType` enum in `manimlogic/components/logic_gates.py`
+1. Add the gate type to `LogicType` enum in `logicedu/components/logic_gates.py`
 2. Create the gate class inheriting from `BinaryLogic` or `UnaryLogic`
 3. Add the gate to the `all_gates` list
 4. Update `__init__.py` files to export the new gate
 
 ### Architecture Components
-1. Create the component class in `manimlogic/components/blocks.py`
+1. Create the component class in `logicedu/components/blocks.py`
 2. Inherit from `VGroupLogicObjectBase`
 3. Implement required methods (`dim_all`, `undim_all`, etc.)
 4. Add proper pin connections

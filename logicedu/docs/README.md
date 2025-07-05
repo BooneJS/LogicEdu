@@ -1,4 +1,4 @@
-# ManimLogic Tips and Tricks
+# LogicEdu Tips and Tricks
 
 ## Objects
 

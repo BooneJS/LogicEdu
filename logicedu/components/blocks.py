@@ -1052,7 +1052,7 @@ class BranchLogic(VGroupLogicObjectBase):
             pin_type=PinType.INPUT,
             label="pcplus4",
             bit_width=32,
-        ).shift(self.pcplus4_bus.get_vertices()[0])
+        ).shift(np.array(self.pcplus4_bus.vertices[0]))
 
         self.add(
             self.branch_adder,

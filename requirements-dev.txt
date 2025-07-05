@@ -1,0 +1,44 @@
+# Development dependencies for ManimLogic
+# 
+# USAGE INSTRUCTIONS:
+# 
+# For End Users (just want to use the library):
+#   pip install manimlogic
+# 
+# For Developers (want to contribute to the project):
+#   1. Clone the repository
+#   2. Create virtual environment: python -m venv venv
+#   3. Activate virtual environment: source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
+#   4. Install in development mode: pip install -e .
+#   5. Install development dependencies: pip install -r requirements-dev.txt
+#   6. Run tests: pytest
+#   7. Format code: black .
+#   8. Check code quality: flake8
+#   9. Type checking: mypy manimlogic/
+# 
+# For Contributors:
+#   - Write tests for new features in tests/
+#   - Ensure all tests pass: pytest
+#   - Format code before committing: black .
+#   - Check for issues: flake8 && mypy manimlogic/
+#   - Update documentation if adding new features
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Code formatting and linting
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Documentation
+sphinx>=7.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Build tools
+hatchling>=1.0.0
+twine>=4.0.0
+
+# Type checking
+types-numpy>=1.0.0 

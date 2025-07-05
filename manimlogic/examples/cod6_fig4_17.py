@@ -11,7 +11,7 @@ from manim import (
     Text,
     LaggedStart,
 )
-from blocks import (
+from manimlogic import (
     AluControl,
     ALUZ,
     PC,
@@ -23,11 +23,26 @@ from blocks import (
     RegisterFile,
     Mux,
     SignExtend,
+    create_grid,
+    ConnectorLine,
+    ArbitrarySegmentLine,
+    GRID,
 )
-from basics import create_grid, ConnectorLine, DOWN, UP, GRID, ArbitrarySegmentLine
+from manim import DOWN, UP
 
 
 class Cod6Fig417(Scene):
+    """
+    Example showing the MIPS architecture from Chapter 6, Figure 4.17.
+
+    This animation demonstrates the construction of a MIPS processor datapath,
+    showing how components are added and connected step by step.
+
+    Reference: Computer Organization and Design, 6th Edition (MIPS),
+    David A. Patterson & John L. Hennessy,
+    [Elsevier Book Companion Site](https://www.elsevier.com/books-and-journals/book-companion/9780128201091)
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.all_objects = VGroup()
@@ -47,6 +62,8 @@ class Cod6Fig417(Scene):
         self.wait(1)
 
     def construct(self):
+        """Construct the MIPS processor datapath."""
+        # Create a grid for debugging alignment
         # grid = create_grid()
         # self.play(FadeIn(grid))
 

@@ -16,7 +16,7 @@ from manim import (
 )
 import numpy as np
 from typing import List
-from basics import (
+from ..core.basics import (
     Pin,
     PinSide,
     PinType,
@@ -24,7 +24,7 @@ from basics import (
     ConnectorLine,
     ArbitrarySegmentLine,
 )
-from logic_gates import AND2
+from .logic_gates import AND2
 import math
 
 

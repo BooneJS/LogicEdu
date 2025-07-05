@@ -25,10 +25,13 @@ GRID = 0.1
 
 
 def grid_round(x: float) -> float:
+    """Round a float to 1 decimal place to bring order to wire routing."""
     return np.round(x, 1)
 
 
 class PinSide(enum.Enum):
+    """Defines the side of a component where a pin can be placed."""
+
     LEFT = 1
     RIGHT = 2
     TOP = 3
@@ -36,11 +39,15 @@ class PinSide(enum.Enum):
 
 
 class PinType(enum.Enum):
+    """Defines the type of a pin."""
+
     INPUT = 1
     OUTPUT = 2
 
 
 class VGroupLogicBase(VGroup):
+    """Base class for all logic objects."""
+
     def __init__(self, **kwargs):
         self.dim_value = kwargs.pop("dim_value", 0.3)
         super().__init__(**kwargs)
@@ -53,6 +60,47 @@ class VGroupLogicBase(VGroup):
 
 
 class Pin(VGroupLogicBase):
+    """
+    A Pin represents a connection point on a digital logic component.
+
+    Pins are the fundamental building blocks for connecting components in ManimLogic.
+    Each pin consists of a Manim Line and Dot, and can optionally display labels,
+    bus indicators for multi-bit connections, and inversion bubbles.
+
+    Attributes:
+        line (Line): The main connection line extending from the component
+        dot (Dot): The connection point at the end of the line
+        label (Text, optional): Text label displayed next to the pin
+        bus_line (Line, optional): Visual indicator for multi-bit connections
+        bus_text (Text, optional): Bit width indicator for bus connections
+        circle (Circle, optional): Inversion bubble for inverted pins
+
+    Parameters:
+        pin_side (PinSide): Which side of the component the pin is on (LEFT, RIGHT, TOP, BOTTOM)
+        pin_length (float): Length of the pin line
+        pin_type (PinType): Whether the pin is an INPUT or OUTPUT (default: INPUT)
+        label (str): Text label for the pin (default: "")
+        show_label (bool): Whether to display the label (default: False)
+        inner_label (bool): Whether to place label inside or outside component (default: True)
+        bit_width (int): Number of bits for bus connections; >1 generates a bus slash and bit-width text (default: 1)
+        dot_radius (float): Radius of the connection dot (default: 0.05)
+        not_bubble_radius (float): Radius of inversion bubble (default: 0.06)
+        font_size (int): Font size for labels (default: 14)
+        color: Color of the pin elements (default: WHITE)
+
+    Examples:
+        >>> # Create a simple input pin
+        >>> input_pin = Pin(pin_side=PinSide.LEFT, pin_type=PinType.INPUT, label="A")
+
+        >>> # Create a 32-bit bus output pin
+        >>> bus_pin = Pin(pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT,
+        ...               label="Data", bit_width=32)
+
+        >>> # Create an inverted input pin
+        >>> inv_pin = Pin(pin_side=PinSide.LEFT, pin_type=PinType.INPUT, label="CLK")
+        >>> inv_pin.add_invert()
+    """
+
     def __init__(self, **kwargs):
         self.inner_label = kwargs.pop("inner_label", True)
         self.label_str = kwargs.pop("label", "")
@@ -194,6 +242,8 @@ class Pin(VGroupLogicBase):
 
 
 class VGroupLogicObjectBase(VGroupLogicBase):
+    """Base class for all LogicObject objects."""
+
     def __init__(self, **kwargs):
         self.dim_value = kwargs.pop("dim_value", 0.3)
         self.pins: List[Pin] = []
@@ -350,8 +400,10 @@ class ArbitrarySegmentLine(VGroupLogicBase):
 
 
 def create_grid() -> NumberPlane:
-    """Create a NumberPlane object to represent the grid. x_range and y_range define the
-    visible area of the grid. x_length and y_length define the spacing between the major grid lines (deltas).
+    """Create a NumberPlane object to represent the grid, useful when
+    debugging a scene to look for alignment. x_range and y_range define
+    the visible area of the grid. x_length and y_length define the
+    spacing between the major grid lines (deltas).
     """
     return NumberPlane(
         x_range=[-7, 7, 0.5],  # Start, End, Step (delta between lines)

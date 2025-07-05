@@ -1,9 +1,32 @@
 [project]
-name = "ManimLogic"
+name = "manimlogic"
 version = "0.1.0"
 description = "Digital logic building blocks in Manim"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "manim>=0.19.0",
+dependencies = ["manim>=0.19.0"]
+authors = [{ name = "Boone Severson", email = "boonejs@me.com" }]
+keywords = ["manim", "digital-logic", "circuits", "animation", "education"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: Presentation",
+    "Topic :: Scientific/Engineering :: Visualization",
 ]
+
+[project.urls]
+Homepage = "https://github.com/BooneJS/manimlogic"
+Documentation = "https://github.com/BooneJS/manimlogic"
+Repository = "https://github.com/BooneJS/manimlogic.git"
+Issues = "https://github.com/BooneJS/manimlogic/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["manimlogic"]

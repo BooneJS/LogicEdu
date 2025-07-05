@@ -5,6 +5,7 @@ from manim import (
     Scene,
     FadeIn,
     WHITE,
+    BLUE,
     LEFT,
     UP,
     DOWN,
@@ -12,9 +13,24 @@ from manim import (
     Create,
 )
 
-from basics import ConnectorLine, GRID, create_grid
-from blocks import *
-from logic_gates import *
+from manimlogic import (
+    ConnectorLine,
+    GRID,
+    create_grid,
+    ALUZ,
+    DFF,
+    DFFVariant,
+    Mux,
+    SignExtend,
+    ShiftLeft,
+    ControlUnit,
+    AluControl,
+    PC,
+    InstructionMemory,
+    DataMemory,
+    RegisterFile,
+    all_gates,
+)
 
 
 class Demo(Scene):

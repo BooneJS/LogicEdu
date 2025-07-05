@@ -15,7 +15,7 @@ from manim import (
     DEGREES,
 )
 from manim.typing import Point3DLike
-from basics import Pin, PinSide, VGroupLogicBase
+from ..core.basics import Pin, PinSide, VGroupLogicBase
 from typing import List
 import enum
 import numpy as np

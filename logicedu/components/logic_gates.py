@@ -1,21 +1,22 @@
 from math import sqrt
 from manim import (
-    VGroup,
-    Circle,
     RIGHT,
     LEFT,
     UP,
     DOWN,
     ORIGIN,
     WHITE,
-    PI,
     ArcBetweenPoints,
     ArcPolygon,
-    Polygon,
-    DEGREES,
 )
 from manim.typing import Point3DLike
-from ..core.basics import Pin, PinSide, PinType, VGroupLogicBase
+from ..core.basics import (
+    Pin,
+    PinSide,
+    PinType,
+    VGroupLogicBase,
+    VGroupLogicObjectBase,
+)
 from typing import List
 import enum
 import numpy as np
@@ -169,69 +170,70 @@ LOGIC_UP = UP * ShapeFactory.gate_dim()
 LOGIC_DOWN = DOWN * ShapeFactory.gate_dim()
 
 
-class UnaryLogic(VGroupLogicBase):
+class UnaryLogic(VGroupLogicObjectBase):
     """Creates shapes for unary logic gates per MIL-STD-806B."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.inputs: List[Pin] = []
-        self.outputs: List[Pin] = []
         color = kwargs.pop("color", WHITE)
 
         self.shape = ShapeFactory.create_shape(LogicType.INV, color=color, **kwargs)
         self.add(self.shape)
 
-        self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=color, **kwargs).shift(
-                UP * self.get_height() / 2
-            )
+        self.pins.append(
+            Pin(
+                pin_side=PinSide.LEFT, pin_type=PinType.INPUT, color=color, **kwargs
+            ).shift(UP * self.get_height() / 2)
         )
-        self.outputs.append(
+        self.pins.append(
             Pin(
                 pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT, color=color, **kwargs
             ).shift(UP * self.get_height() / 2 + RIGHT * self.shape.get_width())
         )
-        self.add(*self.inputs)
-        self.add(*self.outputs)
+        self.add(*self.pins)
 
     def invert_output(self):
-        self.outputs[0].add_invert()
+        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+        if output_pins:
+            output_pins[0].add_invert()
 
     def get_input_by_index(self, index: int) -> Pin:
         """Return the input Pin at the specified index."""
-        if 0 <= index < len(self.inputs):
-            return self.inputs[index]
+        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+        if 0 <= index < len(input_pins):
+            return input_pins[index]
         else:
             raise ValueError(f"Input pin index {index} not found")
 
     def get_output_by_index(self, index: int) -> Pin:
         """Return the output Pin at the specified index."""
-        if 0 <= index < len(self.outputs):
-            return self.outputs[index]
+        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+        if 0 <= index < len(output_pins):
+            return output_pins[index]
         else:
             raise ValueError(f"Output pin index {index} not found")
 
     def get_input_count(self):
-        return len(self.inputs)
+        return len([pin for pin in self.pins if pin.pin_type == PinType.INPUT])
 
     def get_output_count(self):
-        return len(self.outputs)
+        return len([pin for pin in self.pins if pin.pin_type == PinType.OUTPUT])
 
     def get_height(self):
         return self.shape.get_height()
 
     def dim_all(self):
         self.shape.set_stroke(opacity=self.dim_value)
-        for pin in self.inputs + self.outputs:
+        for pin in self.pins:
             pin.set_opacity(self.dim_value)
 
     def undim_all(self):
         self.shape.set_stroke(opacity=1)
-        for pin in self.inputs + self.outputs:
+        for pin in self.pins:
             pin.set_opacity(1)
 
 
-class BinaryLogic(VGroupLogicBase):
+class BinaryLogic(VGroupLogicObjectBase):
     def __init__(self, logic_type: LogicType, **kwargs):
         self.num_inputs = kwargs.pop("num_inputs", 2)
         color = kwargs.pop("color", WHITE)
@@ -248,50 +250,49 @@ class BinaryLogic(VGroupLogicBase):
                     ShapeFactory.gate_dim() / 2 - ShapeFactory.edge_to_pin(),
                 )
             )
-        self.inputs: List[Pin] = []
-        self.outputs: List[Pin] = []
-
         self.shape = ShapeFactory.create_shape(self.logic_type, color=color, **kwargs)
         self.add(self.shape)
 
         # Create Input Pins for 2 or 3 input gates.
         # Input 0 measures down from the top of the gate.
-        self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=color).shift(
+        self.pins.append(
+            Pin(pin_side=PinSide.LEFT, color=color, pin_type=PinType.INPUT).shift(
                 LOGIC_UP + DOWN * ShapeFactory.edge_to_pin()
             )
         )
         # If there's more than 2 inputs, add the second input to the middle
         if self.num_inputs > 2:
-            self.inputs.append(
-                Pin(pin_side=PinSide.LEFT, color=color).shift(LOGIC_UP / 2)
+            self.pins.append(
+                Pin(pin_side=PinSide.LEFT, color=color, pin_type=PinType.INPUT).shift(
+                    LOGIC_UP / 2
+                )
             )
 
         # The last input measures up from the bottom of the gate.
-        self.inputs.append(
-            Pin(pin_side=PinSide.LEFT, color=color).shift(
+        self.pins.append(
+            Pin(pin_side=PinSide.LEFT, color=color, pin_type=PinType.INPUT).shift(
                 UP * ShapeFactory.edge_to_pin()
             )
         )
 
         # Shorten the outermost input pins.
-        self.inputs[0].line.put_start_and_end_on(
-            self.inputs[0].line.get_start() + LEFT * outer_pin_intercept,
-            self.inputs[0].line.get_end(),
+        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+        input_pins[0].line.put_start_and_end_on(
+            input_pins[0].line.get_start() + LEFT * outer_pin_intercept,
+            input_pins[0].line.get_end(),
         )
-        self.inputs[self.num_inputs - 1].line.put_start_and_end_on(
-            self.inputs[self.num_inputs - 1].line.get_start()
+        input_pins[self.num_inputs - 1].line.put_start_and_end_on(
+            input_pins[self.num_inputs - 1].line.get_start()
             + LEFT * outer_pin_intercept,
-            self.inputs[self.num_inputs - 1].line.get_end(),
+            input_pins[self.num_inputs - 1].line.get_end(),
         )
 
-        self.outputs.append(
+        self.pins.append(
             Pin(pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT, color=color).shift(
                 self.shape.arcs[1].get_end()
             )
         )
-        self.add(*self.inputs)
-        self.add(*self.outputs)
+        self.add(*self.pins)
 
         # Handle Inverting output and Exclusive OR Inputs
         match self.logic_type:
@@ -301,7 +302,9 @@ class BinaryLogic(VGroupLogicBase):
                 self.ex_inputs()
 
     def invert_output(self):
-        self.outputs[0].add_invert()
+        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+        if output_pins:
+            output_pins[0].add_invert()
 
     def ex_inputs(self):
         left_shift = LEFT * (
@@ -317,7 +320,8 @@ class BinaryLogic(VGroupLogicBase):
         ).shift(LEFT * ShapeFactory.ex_offset())
         self.add(ex)
 
-        for pin in self.inputs:
+        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+        for pin in input_pins:
             pin.line.put_start_and_end_on(
                 pin.line.get_start() + LEFT * ShapeFactory.ex_offset(),
                 pin.line.get_end(),
@@ -325,32 +329,34 @@ class BinaryLogic(VGroupLogicBase):
 
     def get_input_by_index(self, index: int) -> Pin:
         """Return the input Pin at the specified index."""
-        if 0 <= index < len(self.inputs):
-            return self.inputs[index]
+        input_pins = [pin for pin in self.pins if pin.pin_type == PinType.INPUT]
+        if 0 <= index < len(input_pins):
+            return input_pins[index]
         else:
             raise ValueError(f"Input pin index {index} not found")
 
     def get_output_by_index(self, index: int) -> Pin:
         """Return the output Pin at the specified index."""
-        if 0 <= index < len(self.outputs):
-            return self.outputs[index]
+        output_pins = [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
+        if 0 <= index < len(output_pins):
+            return output_pins[index]
         else:
             raise ValueError(f"Output pin index {index} not found")
 
     def get_input_count(self):
-        return len(self.inputs)
+        return len([pin for pin in self.pins if pin.pin_type == PinType.INPUT])
 
     def get_output_count(self):
-        return len(self.outputs)
+        return len([pin for pin in self.pins if pin.pin_type == PinType.OUTPUT])
 
     def dim_all(self):
         self.shape.set_stroke(opacity=self.dim_value)
-        for pin in self.inputs + self.outputs:
+        for pin in self.pins:
             pin.set_opacity(self.dim_value)
 
     def undim_all(self):
         self.shape.set_stroke(opacity=1)
-        for pin in self.inputs + self.outputs:
+        for pin in self.pins:
             pin.set_opacity(1)
 
 

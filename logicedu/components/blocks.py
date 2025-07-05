@@ -222,9 +222,7 @@ class AdderPlus4(Adder):
             self.get_input_by_index(1), LEFT
         )
         self.add(self.plus4_text)
-        self.shift(
-            DOWN * (self.shape.get_height() / 2) + LEFT * (self.shape.get_width() / 2)
-        )
+        self.shift(DOWN * (self.shape.height / 2) + LEFT * (self.shape.width / 2))
 
     def dim_all(self):
         super().dim_all()
@@ -394,7 +392,7 @@ class DFF(VGroupLogicObjectBase):
             self.s_pin = Pin(
                 pin_side=PinSide.TOP, pin_type=PinType.INPUT, label="S", show_label=True
             )
-            self.s_pin.shift(UP * self.shape.get_height() + RIGHT * 0.5)
+            self.s_pin.shift(UP * self.shape.height + RIGHT * 0.5)
             self.add(self.s_pin)
 
     def get_input_by_index(self, index: int) -> Pin:
@@ -1008,7 +1006,7 @@ class BranchLogic(VGroupLogicObjectBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.branch_adder = Adder(color=WHITE).scale(0.6)
-        self.branch_adder.shift(DOWN * self.branch_adder.get_height() / 2)
+        self.branch_adder.shift(DOWN * self.branch_adder.height / 2)
         self.shiftleft2 = ShiftLeft(color=WHITE, amount=2)
         self.shiftleft2.shift(
             self.branch_adder.get_input_by_index(1).dot.get_center()

@@ -293,7 +293,7 @@ class Cod6Fig417(Scene):
         # Introduce ALU
         self.dim_all()
         alu = ALUZ(color=WHITE)
-        alu.shift(DOWN * alu.shape.get_height() / 2 + LEFT * alu.shape.get_width() / 2)
+        alu.shift(DOWN * alu.shape.height / 2 + LEFT * alu.shape.width / 2)
         alu_0_pin = alu.get_input_by_index(0)
         alu_1_pin = alu.get_input_by_index(1)
         regfile_read_data1_pin = regfile.get_output_by_label("ReadData1")

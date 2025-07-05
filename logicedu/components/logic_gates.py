@@ -183,12 +183,12 @@ class UnaryLogic(VGroupLogicObjectBase):
         self.pins.append(
             Pin(
                 pin_side=PinSide.LEFT, pin_type=PinType.INPUT, color=color, **kwargs
-            ).shift(UP * self.get_height() / 2)
+            ).shift(UP * self.height / 2)
         )
         self.pins.append(
             Pin(
                 pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT, color=color, **kwargs
-            ).shift(UP * self.get_height() / 2 + RIGHT * self.shape.get_width())
+            ).shift(UP * self.height / 2 + RIGHT * self.shape.width)
         )
         self.add(*self.pins)
 
@@ -220,7 +220,7 @@ class UnaryLogic(VGroupLogicObjectBase):
         return len([pin for pin in self.pins if pin.pin_type == PinType.OUTPUT])
 
     def get_height(self):
-        return self.shape.get_height()
+        return self.shape.height
 
     def dim_all(self):
         self.shape.set_stroke(opacity=self.dim_value)

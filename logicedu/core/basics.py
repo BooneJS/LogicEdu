@@ -230,15 +230,19 @@ class Pin(VGroupLogicBase):
         super().dim_all()
         self.line.set_opacity(self.dim_value)
         self.dot.set_opacity(self.dim_value)
-        self.bus_line.set_opacity(self.dim_value)
-        self.bus_text.set_opacity(self.dim_value)
+        if hasattr(self, "bus_line"):
+            self.bus_line.set_opacity(self.dim_value)
+        if hasattr(self, "bus_text"):
+            self.bus_text.set_opacity(self.dim_value)
 
     def undim_all(self):
         super().undim_all()
         self.line.set_opacity(1)
         self.dot.set_opacity(1)
-        self.bus_line.set_opacity(1)
-        self.bus_text.set_opacity(1)
+        if hasattr(self, "bus_line"):
+            self.bus_line.set_opacity(1)
+        if hasattr(self, "bus_text"):
+            self.bus_text.set_opacity(1)
 
 
 class VGroupLogicObjectBase(VGroupLogicBase):
@@ -262,10 +266,22 @@ class VGroupLogicObjectBase(VGroupLogicBase):
         return [pin for pin in self.pins if pin.pin_type == PinType.OUTPUT]
 
     def get_input_by_index(self, index: int) -> Pin:
-        return self._get_input_pins()[index]
+        input_pins = self._get_input_pins()
+        if 0 <= index < len(input_pins):
+            return input_pins[index]
+        else:
+            raise ValueError(
+                f"Input pin index {index} not found. Available indices: 0-{len(input_pins)-1}"
+            )
 
     def get_output_by_index(self, index: int) -> Pin:
-        return self._get_output_pins()[index]
+        output_pins = self._get_output_pins()
+        if 0 <= index < len(output_pins):
+            return output_pins[index]
+        else:
+            raise ValueError(
+                f"Output pin index {index} not found. Available indices: 0-{len(output_pins)-1}"
+            )
 
     def get_input_by_label(self, label):
         for pin in self._get_input_pins():

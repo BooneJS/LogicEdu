@@ -89,7 +89,7 @@ class Cod6Fig417(Scene):
             raise ValueError("PC output pin not found")
         pc_to_pcplus4_bus = ConnectorLine(
             start_pin=pc_out_pin,
-            end_pin=adder_plus4.get_input0_connection(),
+            end_pin=adder_plus4.get_input_by_index(0),
             manhatten=True,
         )
         self.add_object(pc_to_pcplus4_bus)
@@ -294,8 +294,8 @@ class Cod6Fig417(Scene):
         self.dim_all()
         alu = ALUZ(color=WHITE)
         alu.shift(DOWN * alu.shape.get_height() / 2 + LEFT * alu.shape.get_width() / 2)
-        alu_0_pin = alu.get_input0_connection()
-        alu_1_pin = alu.get_input1_connection()
+        alu_0_pin = alu.get_input_by_index(0)
+        alu_1_pin = alu.get_input_by_index(1)
         regfile_read_data1_pin = regfile.get_output_by_label("ReadData1")
         if regfile_read_data1_pin is None:
             raise ValueError("ReadData1 input pin not found")
@@ -472,7 +472,7 @@ class Cod6Fig417(Scene):
         dmem_readdata_pin = dmem.get_output_by_label("ReadData")
         if dmem_readdata_pin is None:
             raise ValueError("ReadData output pin not found")
-        alu_result_pin = alu.get_result_connection()
+        alu_result_pin = alu.get_output_by_index(0)
         dmem_scale = 0.6
         self.wait(1)
         self.play(
@@ -619,7 +619,7 @@ class Cod6Fig417(Scene):
         self.undim_all()
 
         # Wire the Branch Logic
-        pcplus4_pin = adder_plus4.get_result_connection()
+        pcplus4_pin = adder_plus4.get_output_by_index(0)
         branch_logic_pcplus4_pin = branch_logic.get_input_by_label("pcplus4")
         if branch_logic_pcplus4_pin is None:
             raise ValueError("BranchLogic.pcplus4 input pin not found")
@@ -655,7 +655,7 @@ class Cod6Fig417(Scene):
         )
         self.add_object(control_branch_to_branch_logic_bus)
 
-        alu_zero_pin = alu.get_zero_connection()
+        alu_zero_pin = alu.get_output_by_index(1)
         branch_logic_zero_pin = branch_logic.get_input_by_label("zero")
         if branch_logic_zero_pin is None:
             raise ValueError("BranchLogic.zero input pin not found")

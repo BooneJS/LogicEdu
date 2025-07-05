@@ -52,7 +52,7 @@ class MyCircuit(Scene):
             raise ValueError("ReadData1 output pin not found")
         wire = ConnectorLine(
             start_pin=rf_readdata1_pin,
-            end_pin=alu.get_input0_connection(),
+            end_pin=alu.get_input_by_index(0),
             manhatten=True
         )
         self.play(Create(wire))

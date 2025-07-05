@@ -108,17 +108,21 @@ class ALUZ(VGroupLogicObjectBase):
             self.label,
         )
 
-    def get_input0_connection(self) -> Pin:
-        return self.input0_pin
+    def get_input_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.input0_pin
+        elif index == 1:
+            return self.input1_pin
+        else:
+            raise ValueError(f"Input pin index {index} not found")
 
-    def get_input1_connection(self) -> Pin:
-        return self.input1_pin
-
-    def get_result_connection(self) -> Pin:
-        return self.result_pin
-
-    def get_zero_connection(self) -> Pin:
-        return self.zero_pin
+    def get_output_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.result_pin
+        elif index == 1:
+            return self.zero_pin
+        else:
+            raise ValueError(f"Output pin index {index} not found")
 
     def get_bottom_coordinate(self) -> np.ndarray:
         return (self.shape.get_vertices()[0] + self.shape.get_vertices()[1]) / 2
@@ -178,14 +182,19 @@ class Adder(VGroupLogicObjectBase):
             self.shape, self.label, self.input0_pin, self.input1_pin, self.result_pin
         )
 
-    def get_input0_connection(self) -> Pin:
-        return self.input0_pin
+    def get_input_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.input0_pin
+        elif index == 1:
+            return self.input1_pin
+        else:
+            raise ValueError(f"Input pin index {index} not found")
 
-    def get_input1_connection(self) -> Pin:
-        return self.input1_pin
-
-    def get_result_connection(self) -> Pin:
-        return self.result_pin
+    def get_output_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.result_pin
+        else:
+            raise ValueError(f"Output pin index {index} not found")
 
     def dim_all(self):
         super().dim_all()
@@ -210,7 +219,7 @@ class AdderPlus4(Adder):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.plus4_text = Text("'d4", font_size=36, color=WHITE).next_to(
-            self.get_input1_connection(), LEFT
+            self.get_input_by_index(1), LEFT
         )
         self.add(self.plus4_text)
         self.shift(
@@ -346,43 +355,69 @@ class DFF(VGroupLogicObjectBase):
         )
         self.add(self.shape)
         self.d_pin = Pin(
-            pin_side=PinSide.LEFT, label="D", show_label=True, bit_width=bit_width
+            pin_side=PinSide.LEFT,
+            pin_type=PinType.INPUT,
+            label="D",
+            show_label=True,
+            bit_width=bit_width,
         )
         self.d_pin.shift(dq_height)
         self.q_pin = Pin(
-            pin_side=PinSide.RIGHT, label="Q", show_label=True, bit_width=bit_width
+            pin_side=PinSide.RIGHT,
+            pin_type=PinType.OUTPUT,
+            label="Q",
+            show_label=True,
+            bit_width=bit_width,
         )
 
         self.q_pin.shift(dq_height + RIGHT * width_multiplier)
         self.clk_pin = Pin(
-            pin_side=PinSide.LEFT, label="clk", show_label=True, font_size=18
+            pin_side=PinSide.LEFT,
+            pin_type=PinType.INPUT,
+            label="clk",
+            show_label=True,
+            font_size=18,
         )
         self.clk_pin.shift(UP * clk_triangle_bottom_height + UP * clk_side / 2)
         self.clk_pin.label.shift(RIGHT * right_triangle_height)
         self.add(self.d_pin, self.q_pin, self.clk_pin)
         if self.variant == DFFVariant.DFF_R or self.variant == DFFVariant.DFF_SR:
-            self.r_pin = Pin(pin_side=PinSide.BOTTOM, label="R", show_label=True)
+            self.r_pin = Pin(
+                pin_side=PinSide.BOTTOM,
+                pin_type=PinType.INPUT,
+                label="R",
+                show_label=True,
+            )
             self.r_pin.shift(RIGHT * 0.5)
             self.add(self.r_pin)
         if self.variant == DFFVariant.DFF_SR:
-            self.s_pin = Pin(pin_side=PinSide.TOP, label="S", show_label=True)
+            self.s_pin = Pin(
+                pin_side=PinSide.TOP, pin_type=PinType.INPUT, label="S", show_label=True
+            )
             self.s_pin.shift(UP * self.shape.get_height() + RIGHT * 0.5)
             self.add(self.s_pin)
 
-    def get_d_connection(self) -> Pin:
-        return self.d_pin
+    def get_input_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.d_pin
+        elif index == 1:
+            return self.clk_pin
+        elif index == 2 and (
+            self.variant == DFFVariant.DFF_R or self.variant == DFFVariant.DFF_SR
+        ):
+            return self.r_pin
+        elif index == 3 and self.variant == DFFVariant.DFF_SR:
+            return self.s_pin
+        else:
+            raise ValueError(
+                f"Input pin index {index} not found for variant {self.variant}"
+            )
 
-    def get_q_connection(self) -> Pin:
-        return self.q_pin
-
-    def get_clk_connection(self) -> Pin:
-        return self.clk_pin
-
-    def get_r_connection(self) -> Pin:
-        return self.r_pin
-
-    def get_s_connection(self) -> Pin:
-        return self.s_pin
+    def get_output_by_index(self, index: int) -> Pin:
+        if index == 0:
+            return self.q_pin
+        else:
+            raise ValueError(f"Output pin index {index} not found")
 
 
 class GenEllipse(VGroupLogicObjectBase):
@@ -976,13 +1011,13 @@ class BranchLogic(VGroupLogicObjectBase):
         self.branch_adder.shift(DOWN * self.branch_adder.get_height() / 2)
         self.shiftleft2 = ShiftLeft(color=WHITE, amount=2)
         self.shiftleft2.shift(
-            self.branch_adder.get_input1_connection().dot.get_center()
+            self.branch_adder.get_input_by_index(1).dot.get_center()
             - self.shiftleft2.get_output_by_index(0).dot.get_center()
         )
 
         self.mux2 = Mux(color=WHITE).scale(1.5)
         self.mux2.shift(
-            self.branch_adder.get_result_connection().dot.get_center()
+            self.branch_adder.get_output_by_index(0).dot.get_center()
             - self.mux2.get_input_by_index(1).dot.get_center()
         )
 
@@ -991,20 +1026,20 @@ class BranchLogic(VGroupLogicObjectBase):
             0.8 * DOWN
             + (
                 self.mux2.get_input_by_index(2).dot.get_center()
-                - self.and2.get_output_connection().dot.get_center()
+                - self.and2.get_output_by_index(0).dot.get_center()
             )
         )
         self.mux_sel_wire = ConnectorLine(
             start_pin=self.mux2.get_input_by_index(2),
-            end_pin=self.and2.get_output_connection(),
+            end_pin=self.and2.get_output_by_index(0),
             manhatten=False,
             color=BLUE,
         )
         pcplus4_upper_line_start = (
-            self.branch_adder.get_input0_connection().dot.get_center() + 0.6 * UP
+            self.branch_adder.get_input_by_index(0).dot.get_center() + 0.6 * UP
         )
         self.pcplus4_bus = ArbitrarySegmentLine(
-            self.branch_adder.get_input0_connection().dot.get_center(),
+            self.branch_adder.get_input_by_index(0).dot.get_center(),
             pcplus4_upper_line_start,
             (
                 self.mux2.get_input_by_index(0).dot.get_center()[0],
@@ -1038,9 +1073,9 @@ class BranchLogic(VGroupLogicObjectBase):
             case "imm":
                 return self.shiftleft2.get_input_by_index(0)
             case "branch":
-                return self.and2.get_input0_connection()
+                return self.and2.get_input_by_index(0)
             case "zero":
-                return self.and2.get_input1_connection()
+                return self.and2.get_input_by_index(1)
             case _:
                 raise ValueError(f"Input pin label not found: {label}")
 

@@ -127,24 +127,24 @@ class Demo(Scene):
 
         wires.add(
             ConnectorLine(
-                alu.get_result_connection(),
-                gates_vg[0].get_input1_connection(),
+                alu.get_output_by_index(0),
+                gates_vg[0].get_input_by_index(1),
                 manhatten=True,
                 axis_shift=GRID,
             ),
         )
         wires.add(
             ConnectorLine(
-                alu.get_zero_connection(),
-                gates_vg[0].get_input0_connection(),
+                alu.get_output_by_index(1),
+                gates_vg[0].get_input_by_index(0),
                 manhatten=True,
             ),
         )
 
         wires.add(
             ConnectorLine(
-                dff.get_q_connection(),
-                gates_vg[1].get_input0_connection(),
+                dff.get_output_by_index(0),
+                gates_vg[1].get_input_by_index(0),
                 manhatten=True,
             ),
         )

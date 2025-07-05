@@ -15,7 +15,7 @@ from manim import (
     DEGREES,
 )
 from manim.typing import Point3DLike
-from ..core.basics import Pin, PinSide, VGroupLogicBase
+from ..core.basics import Pin, PinSide, PinType, VGroupLogicBase
 from typing import List
 import enum
 import numpy as np
@@ -187,9 +187,9 @@ class UnaryLogic(VGroupLogicBase):
             )
         )
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=color, **kwargs).shift(
-                UP * self.get_height() / 2 + RIGHT * self.shape.get_width()
-            )
+            Pin(
+                pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT, color=color, **kwargs
+            ).shift(UP * self.get_height() / 2 + RIGHT * self.shape.get_width())
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
@@ -197,11 +197,19 @@ class UnaryLogic(VGroupLogicBase):
     def invert_output(self):
         self.outputs[0].add_invert()
 
-    def get_input_connection(self, index: int):
-        return self.inputs[index].get_connection()
+    def get_input_by_index(self, index: int) -> Pin:
+        """Return the input Pin at the specified index."""
+        if 0 <= index < len(self.inputs):
+            return self.inputs[index]
+        else:
+            raise ValueError(f"Input pin index {index} not found")
 
-    def get_output_connection(self, index: int = 0):
-        return self.outputs[index].get_connection()
+    def get_output_by_index(self, index: int) -> Pin:
+        """Return the output Pin at the specified index."""
+        if 0 <= index < len(self.outputs):
+            return self.outputs[index]
+        else:
+            raise ValueError(f"Output pin index {index} not found")
 
     def get_input_count(self):
         return len(self.inputs)
@@ -278,7 +286,9 @@ class BinaryLogic(VGroupLogicBase):
         )
 
         self.outputs.append(
-            Pin(pin_side=PinSide.RIGHT, color=color).shift(self.shape.arcs[1].get_end())
+            Pin(pin_side=PinSide.RIGHT, pin_type=PinType.OUTPUT, color=color).shift(
+                self.shape.arcs[1].get_end()
+            )
         )
         self.add(*self.inputs)
         self.add(*self.outputs)
@@ -313,17 +323,19 @@ class BinaryLogic(VGroupLogicBase):
                 pin.line.get_end(),
             )
 
-    def get_input0_connection(self) -> Pin:
-        """Return the input0 Pin."""
-        return self.inputs[0]
+    def get_input_by_index(self, index: int) -> Pin:
+        """Return the input Pin at the specified index."""
+        if 0 <= index < len(self.inputs):
+            return self.inputs[index]
+        else:
+            raise ValueError(f"Input pin index {index} not found")
 
-    def get_input1_connection(self) -> Pin:
-        """Return the input1 Pin."""
-        return self.inputs[1]
-
-    def get_output_connection(self) -> Pin:
-        """Return the output Pin."""
-        return self.outputs[0]
+    def get_output_by_index(self, index: int) -> Pin:
+        """Return the output Pin at the specified index."""
+        if 0 <= index < len(self.outputs):
+            return self.outputs[index]
+        else:
+            raise ValueError(f"Output pin index {index} not found")
 
     def get_input_count(self):
         return len(self.inputs)

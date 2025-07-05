@@ -63,8 +63,8 @@ class SimpleCircuit(Scene):
 
         # Connect them
         wire = ConnectorLine(
-            start_pin=and_gate.get_output_connection(),
-            end_pin=or_gate.get_input0_connection(),
+            start_pin=and_gate.get_output_by_index(0),
+            end_pin=or_gate.get_input_by_index(0),
             manhatten=True,
         )
         self.play(Create(wire))
